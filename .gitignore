@@ -1,0 +1,7 @@
+# WorkBuddy internal project data (not source / deliverable)
+.workbuddy-ai/
+
+# OS junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
