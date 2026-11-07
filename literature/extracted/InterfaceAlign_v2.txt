@@ -1,0 +1,1634 @@
+
+
+===== PAGE 1 =====
+
+Attributing Structured-Output Gains in Function Calling:
+Interface Alignment versus Procedural Transfer
+Wanyi Chen1,2, Daoyuan Chen3, and Fang Kong1,2∗
+1School of Computer Science and Technology, Soochow University
+2Jiangsu Key Lab of Language Computing, Suzhou 215123, China
+3Tongyi Lab, Alibaba Group
+berryccc0904@gmail.com, daoyuanchen.cdy@alibaba-inc.com, kongfang@suda.edu.cn
+∗Corresponding author
+Abstract
+Function-calling benchmarks assess whether
+language models can select appropriate tools
+and supply the required arguments. Be-
+cause their scores also depend on express-
+ing calls in an evaluator-specific format, gains
+from prompt-prepended skills may reflect inter-
+face compliance rather than transferable task-
+solving procedures. We introduce a four-layer
+gain-attribution protocol for prompt-prepended
+skill injection, combining canonicalized rescor-
+ing, format-only controls, repaired/balanced
+induction, and portability checks. Applied to
+the Berkeley Function Calling Leaderboard
+(BFCL) and scoped with API-Bank, MATH-
+500, and MultiHop-RAG, the protocol shows
+that several apparent gains are better attributed
+to interface alignment than to procedural trans-
+fer: format-only prompts match or exceed full
+skills in key BFCL cells, repaired/balanced in-
+duction removes the largest sub-frontier gains,
+and API-Bank target-native gains are matched
+within 0.5 percentage points (pp) by length-
+matched generic procedural prompts. These
+findings treat format compliance as a useful
+engineering capability while clarifying what a
+structured-output score certifies. We release
+BFCL-CANONICALand recommend canonical-
+ized metrics, balanced induction, and format-
+only baselines for function-calling skill-gain
+attribution. Code is available at https://github.c
+om/wanyichen06/skill-injection-attribution.
+1 Introduction
+Language models increasingly interact with ex-
+ternal tools and APIs, making function calling a
+central capability of tool-using agents. Function-
+calling benchmarks typically evaluate whether a
+model selects the correct tool, supplies the re-
+quired arguments, and emits a machine-readable
+call. These requirements make benchmark scores
+operationally useful, but they also combine task de-
+cisions with compliance with the evaluator’s output
+interface.
+A common way to improve tool-using agents is
+to prepend reusable instructions, or “skills,” dis-
+tilled from successful trajectories (Wang et al.,
+2023; Ni et al., 2026). A score increase after skill
+injection is often interpreted as evidence that task-
+solving procedures have transferred across models
+or tasks. In function calling, however, the same
+skill may also teach the output schema preferred
+by the evaluator. The resulting gain may therefore
+reflect better tool and argument selection, better
+interface compliance, or both.
+This raises a central question:when prompt-
+prepended skill text improves function-calling
+scores, what attribution does the evidence jus-
+tify?
+A score-only answer is insufficient for this dis-
+tinction. If a skill says how to wrap a function
+call, the measured score may improve even when
+tool and argument selection do not. Conversely,
+a semantically correct call can be marked wrong
+when it uses a wrapper key or API syntax that the
+scorer does not accept. We therefore separate two
+questions that are often merged: whether the model
+selected the right action, and whether it expressed
+that action in the evaluator’s preferred interface.
+Consider a simple item whose correct call
+is math.gcd(a, b) . The model may se-
+lect the right function and arguments but use
+function_name and parameters; the scorer
+expects name and arguments. Strict scoring
+marks the output incorrect even though the function
+and arguments are correct. Canonicalized scoring
+isolates this wrapper-key mismatch.
+Inconsistent evidence.Prior negative-transfer,
+metric-sensitivity, and contract-skill results (Li
+et al., 2026; Xu et al., 2026; Lu et al., 2026) mo-
+tivate direct attribution: when benchmark scores
+improve, what mechanism is responsible?
+Function-calling skill-gain attribution.We pro-
+pose a four-layer attribution protocol for prompt-
+arXiv:2607.02595v2  [cs.SE]  25 Aug 2026
+
+===== PAGE 2 =====
+
+prepended function-calling skill gains in structured-
+output audits based on the Berkeley Function Call-
+ing Leaderboard (BFCL) and API-Bank. We in-
+stantiate the protocol primarily on BFCL, use
+API-Bank as a cross-contract diagnostic, and treat
+MATH-500 and MultiHop-RAG as scope checks.
+Our conclusions therefore concern BFCL/API-
+Bank-style structured-output evaluation rather than
+all forms of agentic reasoning. First, canonical-
+ized rescoring separates wrapper-key aliasing from
+task-policy changes. Second, format-only controls
+test whether an explicit interface contract can re-
+produce the gain. Third, repaired extraction and
+balanced induction test whether the effect depends
+on source-model style or high-scoring demonstra-
+tions. Fourth, cross-family and cross-benchmark
+checks test whether any remaining gain behaves
+like transferable procedure. Applying this proto-
+col shows, in the BFCL/API-Bank-style setting
+studied here, that several gains are real under the
+scored interface, but their source is often interface
+alignment rather than robust procedural transfer.
+Figure 1 summarizes the attribution.
+Contributions.This paper makes three contribu-
+tions.
+• We formulatefunction-calling skill-gain attri-
+butionas a reporting problem for BFCL/API-
+Bank-style structured-output audits: determining
+whether a prompt-prepended skill gain reflects
+task-policy change, interface alignment, or both.
+• We propose and instantiate afour-layer attribu-
+tion protocolfor function-calling skill injection,
+using canonicalized rescoring, format-only con-
+trols, induction-robust extraction, and portability
+checks.
+• We find that, in the BFCL/API-Bank-style set-
+ting studied here, several large gains are more
+consistent withinterface alignmentthan robust
+procedural transfer: format-only prompts can
+match or exceed full skills, the largest gains fail
+under repaired/balanced induction controls, and
+matched generic API-Bank prompts nearly re-
+produce extracted-skill gains. We releaseBFCL-
+CANONICALand reporting guidelines for future
+function-calling skill-gain claims.
+2 Related Work
+Skill extraction, reuse, and negative transfer.
+Tool-use work connects language models to exter-
+nal actions and APIs (Yao et al., 2023; Schick et al.,
+2023; Qin et al., 2024; Patil et al., 2024), while
+trajectory-derived systems store or distill reusable
+skills (Wang et al., 2023; Ni et al., 2026); agent-
+design and guided-replay systems synthesize agent
+designs or training trajectories (Hu et al., 2025;
+Xu et al., 2025). Recent work shows that reuse
+is fragile across tasks, metrics, and contracts (Li
+et al., 2026; Xu et al., 2026; Lu et al., 2026). We
+ask whether a text skill’s structured-output gain
+reflects procedure or evaluator-preferred interface
+conformance.
+Structured-output benchmarks and format sen-
+sitivity.Function-calling benchmarks such as
+BFCL (Patil et al., 2025), API-Bank (Li et al.,
+2023), τ-bench (Yao et al., 2025), and NEST-
+FUL (Basu et al., 2025) score tool use through
+concrete output contracts. These contracts can
+affect behavior apart from task content: format
+restrictions can degrade performance, task solv-
+ing can separate from output formatting, and func-
+tion names matter (Tam et al., 2024; Deng et al.,
+2025; Lin et al., 2024). We treat format as an attri-
+bution mechanism through canonicalized scoring,
+format/wrong-alias prompts, and schema rotation.
+Evaluation diagnostics for skill-induced gains.
+Agent evaluation is vulnerable to small interface
+mismatches, and broader evaluation work argues
+against treating a single score as a complete ac-
+count of model behavior (Liang et al., 2023). Eigen-
+Data (Chen et al., 2026) studies function-calling
+data synthesis, auditing, and repair. Our contribu-
+tion is different: a claim-level attribution protocol
+that combines same-output canonicalized rescoring,
+format-only controls, repaired/balanced induction,
+and portability checks to decide when a structured-
+output gain justifies procedural transfer rather than
+interface alignment.
+3 Evaluation Overview and Experimental
+Setup
+We test whether trajectory-derived skill gains re-
+flect procedural transfer, interface alignment, or
+both using the protocol in Figure 2.
+The next section reports the attribution questions
+and corresponding tests. Here we define only the
+evaluation objects, scoring variants, controls, and
+scope boundaries used by those tests. We com-
+bine controlled local mechanism audits with full
+non-live official-prompt audits over the four BFCL
+non-live categories for selected model/condition
+
+===== PAGE 3 =====
+
+Figure 1: Effect of skill injection (∆ accuracy in percentage points (pp)) under standard vs. canonicalized scoring on
+BFCL. (a) Standard scoring shows large positive and negative effects. (b) Canonicalized scoring removes key-alias
+sensitivity for some cells, but many residual harms remain, showing why canonicalized metrics must be paired with
+mechanism controls and portability probes.
+suites; neither is reported as a leaderboard submis-
+sion. Unless explicitly stated otherwise, BFCL-
+CANONICAL and API-Bank results in this paper
+are controlled local diagnostics or selected non-live
+audits, not official leaderboard submissions or offi-
+cial leaderboard scores. BFCL-CANONICAL uses
+a canonicalized local scorer, while API-Bank re-
+ports native API/required-parameter match rather
+than official leaderboard accuracy.
+Primary comparisons.The main comparisons
+are full skill versus format-only on BFCL, original
+versus repaired/balanced induction on the same
+rows, and API-Bank skill versus length-matched
+generic prompts under native, strict, and row-fresh
+diagnostics. Official-prompt, cross-family, prompt-
+variant, and case-study analyses are scope checks;
+we do not average them into a headline effect.
+From diagnostics to attribution labels.Paired
+tests and bootstrap intervals are the primary evi-
+dence when paired rows are available; a conserva-
+tive margin of τ= 3 percentage points is only a
+descriptive screen for unpaired local matrices. Fol-
+lowing the terminology in Figure 2, we attribute a
+gain tointerface alignmentwhen canonicalization
+or format-only controls account for it. We assess
+induction robustnessby testing whether repaired
+or balanced extraction preserves the effect rather
+than removing it or flipping its sign. Aprocedure-
+supported residual gainmust remain above format-
+only, neutral, and generic controls after canoni-
+calization and induction-robustness checks;porta-
+bilitythen tests whether that residual keeps its di-
+rection across models, output contracts, or bench-
+marks before we make a transfer claim. These
+terms describe what the evidence supports; they do
+not identify hidden causal mechanisms.
+Models.We evaluate 8 Qwen3 models (Yang
+et al., 2025): 0.6B–235B-A22B, spanning a 400×
+parameter range. For cross-family validation
+(§4.4), we also evaluate Llama-3.1 (8B, 70B) and
+Gemma-3 (4B, 12B, 27B) on BFCL under none,
+skill@235B, andformat_only.
+Benchmarks.We use four primary benchmarks:
+BFCL(Patil et al., 2025), a 300-item function-
+calling subset evaluated by AST accuracy;MATH-
+500(Lightman et al., 2024), a locally filtered 470-
+problem subset evaluated by sympy equivalence;
+MultiHop-RAG(Tang and Yang, 2024), a local
+300-question oracle-evidence QA subset evaluated
+by F1; andAPI-Bank(Li et al., 2023), locally
+processed Levels 1–3 with 172, 217, and 119 API-
+calling items.
+For BFCL, the local matrix uses our fixed BFCL-
+v2 JSON subset and standard all-call AST compara-
+tor to hold items, prompts, and raw outputs constant
+while varying scorer canonicalization and wrapper
+expectations. We pair this local mechanism au-
+dit with BFCL official-prompt non-live audits on
+1,040 upstream rows from the four official non-live
+categories (Appendix A.17); these runs use the up-
+stream prompt-mode handler/evaluator and paired
+row tests, but remain non-live selected-model au-
+dits rather than full leaderboard submissions.
+Conditions.Each model-benchmark pair has up
+to five conditions: none, BFCL-CONTRACT
+(our BFCL-style JSON prompt, which specifies
+"name" and "arguments"), and skills ex-
+tracted from 8B, 32B, or 235B source models
+
+===== PAGE 4 =====
+
+Figure 2: Compact attribution protocol and key-alias running example. A gain is treated as procedural transfer only
+after scorer, format-only, induction, and portability controls leave a residual; Appendix B gives item-level examples.
+on the same benchmark. A frozen injection
+template keeps all prompt text except the skill
+block identical. Here, none means no injected
+skill, skill@235B denotes a skill extracted from
+high-scoring Qwen3-235B-A22B trajectories, and
+format-only denotes the required output con-
+tract without extracted task-solving procedure.
+Auxiliary controls are grouped by the attribution
+question they test, not by whether they favor the hy-
+pothesis: format-only and alias-only controls test
+interface alignment; content-only, repaired, and
+balanced-induction controls test residual procedu-
+ral content; matched neutral and generic procedural
+prompts test whether extracted wording adds value
+beyond length- and contract-matched instructions.
+We interpret controls symmetrically: matching the
+skill weakens extraction-specific attribution, while
+harmful or model-dependent behavior is reported
+as a boundary rather than discarded.
+For attribution, we track three observable compo-
+nents of a scored call: tool identity, required argu-
+ment content, and wrapper/interface form. These
+categories describe the evaluated output; we do
+not assume that the underlying model abilities are
+independent. Canonicalization changes only the
+scorer, format-only supplies an interface contract
+without extracted procedure, and repaired/balanced
+or cross-contract controls vary the induction or eval-
+uation setting. These controls are therefore stress
+tests, not independent latent-module interventions.
+In particular, format-only is a sufficiency control:
+matching a full skill does not prove that useful
+procedural behavior is absent.
+Skill extraction.Phase 1 (original) skillswere
+extracted per benchmark by GPT-4o from high-
+scoring none demonstrations.Phase 2 (repaired)
+skillswere re-extracted by Qwen3-32B from bal-
+anced high/low-scoring subsets. The target, BFCL
+rows, injection position, and scorer remain fixed,
+while the extractor family, prompt, and demon-
+stration pool change. Thus, repaired/balanced in-
+duction is a sensitivity test for the induction de-
+sign rather than a single-factor causal intervention.
+Phase 1 is the historical input being tested; re-
+paired, balanced, extractor-by-demonstration, and
+official-prompt controls jointly test whether attri-
+bution survives after the original high-score demo
+selection and extractor style are no longer fixed.
+Appendix A.20 summarizes the retained artifacts
+for regenerating tables and paired statistics. We
+use “repaired” for the Phase 2 re-extraction, “bal-
+anced” for high/low-scoring demonstration pools,
+and “extractor-by-demonstration” for comparisons
+that vary these induction factors.
+
+===== PAGE 5 =====
+
+Table 1: Scope of canonicalization inBFCL-
+CANONICAL.
+Variation Can.? Rationale
+Func-name key: name /
+function/function_name
+Yes Same semantic role
+Arg key: arguments /
+parameters/params
+Yes Same semantic role
+Func-name key:
+function_call
+No Different structure
+Missing wrapper No Identity absent
+Wrong function name No Changes semantics
+Argument key order Yes Order irrelevant
+Argument omission No Changes execution
+Evaluation protocol.ForBFCL, we compute
+three scoring variants. Let ˆyi denote the
+model’s predicted function call for item i, and
+let κ(ˆyi) extract the JSON key used for the
+function name (e.g., "name", "function", or
+"function_name"). Define the canonical pro-
+jection ϕ that maps all key variants to a single
+canonical form while preserving argument content:
+Acccan = 1n nXi=1 1[AST(ϕ(ˆyi), yi) = 1](1)
+where AST(·,·) is the BFCL all-call AST compara-
+tor and yi is the ground truth. Standard accuracy
+uses ˆyi directly (without ϕ); format-normalized ac-
+curacy restricts the sum to items where κ(ˆyi) =
+"name".
+For schema rotation on Qwen3-8B and 14B, min-
+imal format cues request three equivalent wrap-
+pers; we score outputs canonically and under strict
+schema-specific expectations. The BFCL schema-
+control ladder additionally compares schema-only,
+schema-plus-example, and length-matched neutral
+instructions on Qwen3-1.7B, 8B, 14B, and 32B.
+Canonicalization is a narrow de-aliasing diagnos-
+tic, not a semantic “forgiving” evaluator. It merges
+only wrapper-key variants that preserve the same
+semantic role; it does not repair missing identity,
+wrong tool choice, omitted arguments, or struc-
+turally different call representations.
+Attribution rule.We use the Figure 2 terminol-
+ogy throughout. We attribute a gain tointerface
+alignmentwhen format-only already accounts for
+the main score movement. We call a residual a
+procedure-supported residual gainonly when it
+remains positive after canonicalization, exceeds
+format-only, neutral, and length-matched generic
+controls, survives theinduction robustnesschecks,
+and is not explained solely by improved wrapper
+compliance. Finally, theportabilitycheck asks
+whether that residual keeps its direction under a
+new output contract or a cross-benchmark evalua-
+tion; only then do we make a transfer claim. These
+terms state the evidence required for each claim
+strength; they do not identify independent latent
+mechanisms. We use ±3 pp as the descriptive neu-
+tral band and prefer paired tests or confidence in-
+tervals when available; Appendix A.15 shows the
+harmful-cell diagnosis is stable under ±2, ±3, and
+±5 pp bands. Reported cells are single-run unless
+marked as paired or extraction-seed analyses, and
+Appendix A.21 summarizes their source files.
+For API-Bank, the primary local metric checks
+the predicted API name and required ground-truth
+parameters under API-Bank’s bracket syntax. Be-
+cause it does not penalize all extra parameters, we
+call it native API/required-parameter match rather
+than official leaderboard accuracy; main API-Bank
+claims must also agree qualitatively under strict
+exact-parameter and row-fresh diagnostics. All
+API-Bank target-native comparisons use a source-
+file-held-out split with the same examples across
+skill, format, content, and generic controls.
+Appendix Table 6 shows the complete 8 ×5
+BFCL accuracy matrix under standard scoring.
+4 Structured-Output Gain Attribution in
+Function Calling
+We organize the results around four research ques-
+tions (RQs).RQ1asks how much observed BFCL
+gain comes from scorer/interface sensitivity rather
+than better call selection.RQ2asks whether direct
+interface contracts can match or exceed full ex-
+tracted skills.RQ3asks whether the largest gains
+survive repaired and balanced induction.RQ4asks
+whether the diagnosis persists across model fami-
+lies and output contracts. Three findings support
+the main claim: direct format contracts can match
+or exceed full skills; repaired/balanced induction
+removes the largest gains; and API-Bank generic
+procedural prompts nearly reproduce extracted-
+skill gains. Canonicalized rescoring, cross-family
+checks, and selected BFCL official-prompt non-
+live controls set the scope of the claim. Table 2 sum-
+marizes these evaluation settings and the claims
+they support before the detailed diagnostics.
+4.1 Diagnostic: Evaluator Sensitivity to JSON
+Key Aliases
+Before attributing gains to procedural transfer, we
+test evaluator robustness. BFCL-style scoring can
+
+===== PAGE 6 =====
+
+Table 2: Main evidence map and allowed claims. Detailed numeric estimates and paired tests are in Tables 3–4 and
+the appendix.
+Evidence slice What it tests Verdict for attribution Boundary
+BFCL scorer
+sensitivity
+Standard vs. canonicalized
+all-call AST scoring on the
+same outputs.
+Some apparent gains or harms are
+scorer-sensitive rather than task-policy
+changes.
+Companion diagnostic, not
+an official leaderboard
+metric.
+BFCL format
+control
+Full extracted skill vs.
+concise format-only
+prompts.
+Format-only can match or exceed full
+skill, so the full-skill gain is not uniquely
+procedural.
+Does not imply format
+compliance is unimportant.
+BFCL induction
+control
+Original high-score
+induction vs.
+balanced/repaired
+induction.
+Flagship sub-frontier gains do not survive
+cleaner induction controls.
+Diagnoses extraction/demo
+sensitivity, not a single
+latent cause.
+Official-prompt
+BFCL checks
+Upstream prompt/evaluator
+on selected non-live BFCL
+suites.
+No reliable extracted-skill advantage for
+the main Qwen/Llama checks; Gemma
+remains a boundary residual.
+Selected non-live audits,
+not full BFCL leaderboard
+runs.
+API-Bank
+target-native checks
+Held-out API-Bank rows
+with native syntax and
+matched generic prompts.
+Generic procedural prompts nearly
+reproduce target-native skill gains.
+Local diagnostics, not
+official API-Bank
+leaderboard accuracy.
+distinguish two outputs that choose the same func-
+tion and arguments but use different wrapper keys,
+so key choice can change the standard score with-
+out changing the call decision.
+Canonicalized rescoring.In our BFCL-v2
+JSON scoring setup, the standard scorer treats
+"name" as the function-identifier key and marks
+"function" or "function_name" wrong
+even when arguments are correct. We definecanon-
+icalized scoringas AST accuracy after normaliz-
+ing key variants (Eq. 1) and decompose standard-
+scoring gain as:
+∆std|{z}
+observed gain
+= (∆ std −∆ can)| {z }
+alias-sensitive component
++ ∆ can| {z }
+alias-robust component
+(2)
+where deltas are skill-minus-none changes. This
+estimates key-alias sensitivity, not all formatting
+effects (Figure 3). Using ±3 pp as the harm-
+ful/neutral threshold, 3 of 15 harmful cells in the
+full 8×4 matrix flip to neutral under canonical-
+ization (Table 10). Canonicalization removes the
+apparent harm for 14B skill@235B (−11.7→
+−1.0 pp) and shrinks the 8B skill@235B gain
+(+11.3→+3.7 pp), but residual harms re-
+main: 4B skill@235B stays negative (−16.7→
+−11.0 pp) and 32B BFCL-CONTRACTremains
+−17.0 pp. Across 8 models, format-shift magni-
+tude predicts standard-scoring gain:
+∆std ≈β 0 +β 1 ·δ m, r= 0.84, R 2 = 0.71(3)
+(Pearson r= 0.84 , n= 8 , p= 0.009 ; descriptive
+given sample size), accounting for 71% of BFCL-
+Table 3: BFCL standard vs. canonicalized scoring ( ∆
+pp vs. None). Fmt = accuracy restricted to outputs using
+"name"; bold cells are harmful standard-score deltas
+that become neutral after canonicalization.
+BFCL-contract prompt
+Target None Std Can Fmt
+0.6B 26.0+19.3 +17.7−7.3
+1.7B 50.7+13.3 +12.7 +1.6
+4B 42.0+20.3−9.0−14.5
+8B 58.0+14.3 +4.7−18.5
+14B 64.3+3.0−10.3−24.3
+32B 77.7−17.0−17.0−17.6
+30B-A3B 70.0−1.7−1.7−1.7
+235B 80.7−7.7−7.7−9.4
+skill@235B
+Target None Std Can Fmt
+0.6B 26.0−2.7−2.7 +8.9
+1.7B 50.7+17.7 +17.7 +7.4
+4B 42.0−16.7−11.0−19.6
+8B 58.0+11.3 +3.7−2.7
+14B 64.3−11.7−1.0−0.4
+32B 77.7−11.3−13.0−8.0
+30B-A3B 70.0+1.3 +1.3 +0.9
+235B 80.7−4.0−4.0−5.0
+CONTRACTgain variance. Together, these diagnos-
+tics indicate real key-alias sensitivity, but canon-
+icalization is only a companion diagnostic, not a
+complete semantic evaluator or the main mecha-
+nism claim. The next tests therefore ask whether
+full skills add value beyond the interface contract
+itself.
+Format-only control.We isolate format effects
+with a concise format-only JSON specification that
+states the expected wrapper without task procedure.
+For Qwen3-8B, format-only gains +21.3 pp, ex-
+ceeding full skill@235B (+11.3 pp). For 14B
+it is also positive (+15.0 pp) while the full skill is
+
+===== PAGE 7 =====
+
+−60 −40 −20 0 20 40 60
+Δstd (pp)
+−60
+−40
+−20
+0
+20
+40
+60
+Δcan (pp)
+format-dominated
+gains
+Qwen3
+Llama-3.1
+Gemma-3
+y = x
+Figure 3: Standard-scoring gain vs. canonicalized gain
+for all BFCL model–condition pairs. Points far from the
+diagonal identify cells where wrapper-key sensitivity
+changes the interpretation of a skill gain.
+harmful; for 32B it is harmful (−8.0pp), showing
+that interface instructions are sufficient to account
+for major score movement in some cells but remain
+model-state dependent. Alias and schema controls
+show the same pattern, so we treat format-only
+≥ full skill as evidence that the full-skill gain is
+not uniquely attributable to extracted procedural
+content.
+Mechanism.Figure 4 illustrates the format-
+distribution mechanism directly: for 14B,
+skill@235B redirects correct calls toward
+"function_name"; among 48 standard-score
+regressions, 35 become correct after canonicalized
+scoring.
+4.2 Interface Contracts versus Full Skills
+We next test whether injected skills exploit eval-
+uator sensitivity by acting as format instructions
+rather than procedural knowledge.
+Repaired/balanced controls weaken the largest
+gains.Repaired extraction changes extractor fam-
+ily and induction pool, so it is not a single-factor
+causal isolation. We use it as an attribution stress
+test: Table 4 shows that the largest original pos-
+itives do not survive this repaired-and-balanced
+stress test. Because the extractor, prompt, and
+demonstration pool change together, a reversal sup-
+ports sensitivity to induction design but does not
+identify one causal factor.
+Table 4: Effect of skill@235B before and after ex-
+traction repair on BFCL. Original skills use GPT-4o ex-
+traction from the biased induction pool; repaired skills
+use Qwen3-32B extraction from a balanced pool. Re-
+paired effects are mixed rather than uniformly removed,
+so they diagnose extraction/demo sensitivity rather than
+proving a single mechanism.
+Target None Original Repaired∆Change
+0.6B 26.0−2.7−5.3−2.7
+1.7B 50.7+17.7 +3.3−14.3
+4B 42.0−16.7−19.0−2.3
+8B 58.0+11.3−7.7−19.0
+14B 64.3−11.7−9.7 +2.0
+32B 77.7−11.3−10.3 +1.0
+30B-A3B 70.0+1.3−3.7−5.0
+235B 80.7−4.0−3.3 +0.7
+For Qwen3-8B, the original +11.3 pp gain be-
+comes −7.7 pp after repair; for 1.7B, +17.7 pp
+shrinks to +3.3 pp. 235B is slightly negative un-
+der both original and repaired skills ( −4.0 and
+−3.3 pp), and 4B, 14B, and 32B are negative un-
+der both. Appendix B gives concrete item-level
+examples where the original skill succeeds through
+wrapper cues that the repaired skill no longer sup-
+plies.
+Balanced induction.The extractor-by-
+demonstration comparisons vary source/extractor
+style and high-score demonstration selection, but
+do not isolate them as independent causes. For
+8B, biased pools help under both GPT-4o and
+Qwen3-32B extraction ( +11.3 and +11.0 pp),
+while balanced demos reverse both. For 1.7B,
++17.7 pp falls to −1.7 pp with balanced GPT-4o
+subsets and +3.3 pp with repaired Qwen3
+extraction; 14B is sign-unstable. These results are
+consistent with induction-design sensitivity: the
+strongest positive gains depend on the particular
+high-scoring induction examples and extraction
+setup, rather than demonstrating a stable extracted
+procedure.
+Residual controls and subtask heterogeneity.
+Content-only and subtask controls are consistent
+with this diagnosis but are not central to the evi-
+dence. Content-only prompting helps weaker mod-
+els and hurts 14B, while Table 11 shows that skill
+injection helps simple_python for 1.7B/8B but
+harms it for 4B/14B and leaves parallel-call items
+brittle. The pattern is useful for localization, but it
+is not uniform procedural transfer.
+
+===== PAGE 8 =====
+
+0.6B 1.7B 4B 8B 14B 32B 30B-A3B 235B
+none skill none skill none skill none skill none skill none skill none skill none skill
+T arget model
+0
+20
+40
+60
+80
+100Fraction of predictions (%)
+JSON key used in function-call predictions
+"name" (correct) "function" "function_name" other / unstructured
+Figure 4: BFCL wrapper-key distributions before and after skill@235B. For each target model, the no-skill and
+skill@235B bars are shown as an adjacent pair. Blue "name" denotes the expected wrapper key; the figure
+shows wrapper-key distributions rather than overall accuracy. Skill text can move models toward or away from the
+expected key, so wrapper compliance must be separated from tool-choice correctness.
+Table 5: Effect of induction sampling on extracted skill
+quality (BFCL, skill@235B source). Original uses
+the Phase 1 GPT-4o biased pool. Biased and balanced
+entries are means over available subset runs; repaired
+uses Qwen3-32B extraction from a balanced pool.
+Target Original Biased (mean) Balanced (mean) Repaired
+1.7B+17.7−6.3−1.7 +3.3
+8B+11.3 +3.2−3.8−7.7
+32B−11.3−6.2−6.6−10.3
+235B−4.0−6.7−5.3−3.3
+4.3 Demonstration Selection and Balanced
+Induction
+The scorer is sensitive to wrapper format, and skills
+can change wrapper choice. We now ask why the
+original extraction pipeline produced useful format
+cues.
+Induction sampling bias.Original GPT-4o skills
+sampled high-scoring none demonstrations, over-
+representing format-compliant calls. We quantify
+this with three biased and three balanced subset
+runs (Appendix A.9).
+For 8B, biased subsets average +3.2 pp while
+balanced subsets average −3.8 pp. For 1.7B, five
+of six subsets are negative and the sixth is only
++4.0 pp, far below the original +17.7 pp. Qwen3-
+235B also lacks a positive balanced-induction resid-
+ual (mean −5.3 pp). The large original gains are
+therefore more consistent with sensitivity to the
+induction design than with a stable extracted proce-
+dure. The subset resampling results complement,
+but do not by themselves identify, the source of that
+sensitivity.
+4.4 Boundary Conditions and Cross-Contract
+Checks
+Cross-family and official-prompt BFCL.On
+non-Qwen BFCL, format-only exceeds the Qwen3-
+derived full skill in all five rows (Table 15); Llama-
+3.1-70B gains +65.0 pp from the format cue
+but only +1.0 pp from skill@235B, while the
+Qwen3-derived skill reduces scores for smaller
+Gemma models. The official-prompt non-live
+check in Table 2 preserves the boundary interpre-
+tation: Qwen3-8B and Llama-3.1-8B show no reli-
+able extracted-skill advantage, whereas Gemma-3-
+4B retains a model-specific residual. Appendix Sec-
+tion A.17 adds content-only Qwen, prompt-variant,
+repaired-source, and same-family Llama checks;
+none yields a stable residual beyond matched con-
+trols.
+Second benchmark: API-Bank.API-Bank (Li
+et al., 2023) uses[ApiName(params)]. Native
+format cues have almost no mean effect (+0.3 pp),
+whereas the BFCL JSON cue reduces native
+API/required-parameter match by 19.4–54.8 pp
+(Appendix A.12). Under the target-native con-
+tract, the extracted skill improves over native
+format-only, but length-matched generic procedu-
+ral prompts and generic variants nearly match it
+under held-out source files. Thus, API-Bank pro-
+vides a local cross-contract diagnostic rather than
+an official leaderboard result.
+Scope checks: reasoning and QA.MATH-500
+and MultiHop-RAG are mostly null scope checks:
+MATH-500 stays within ±3 pp for all 8 models,
+and MultiHop-RAG stays within ±4 pp for 7/8
+
+===== PAGE 9 =====
+
+models, with one Qwen3-235B exception.
+5 Discussion
+Unified account and scope.BFCL key-alias
+sensitivity creates room for format-driven score
+changes; skills can act as implicit format instruc-
+tions; and high-scoring demonstration selection
+amplifies those cues. Direct interface prompts, re-
+paired/balanced induction, and generic API-Bank
+prompts help account for much of the measured
+movement. Together, these are stress tests of the
+attribution claim, not interventions on independent
+latent modules; the format-only result is a suffi-
+ciency check rather than evidence that procedural
+behavior is absent. The protocol prevents unsup-
+ported transfer claims and specifies the additional
+evidence required before a residual can be credited
+to procedure. The official-prompt Gemma resid-
+ual remains a boundary case. Appendix Table 14
+reports an auxiliary Spider check with the same
+interface-compliance pattern.
+What the claim is.A skill-injection gain should
+not be credited to procedural transfer merely be-
+cause a skill beats none under one scorer. The
+stronger standard is whether the effect survives
+canonicalization, format/procedural controls, bal-
+anced or repaired induction, and target-native or
+cross-family checks. This does not discount format
+compliance, which is a useful engineering capabil-
+ity; it says that gains failing these checks should be
+reported as interface alignment or prompt-contract
+adaptation rather than transferable procedure.
+6 Conclusion
+Structured-output gain attribution clarifies what a
+function-calling score can certify. In our audits,
+several large prompt-induced gains are real under
+the scored interface but do not survive the checks
+needed for procedural transfer: format-only con-
+trols reproduce key BFCL gains, repaired and bal-
+anced induction remove the largest sub-frontier
+improvements, and API-Bank generic procedu-
+ral prompts nearly match target-native extracted
+skills. We recommend reporting canonicalized met-
+rics, format-only baselines, induction-robustness
+checks, and portability checks before calling a
+structured-output gain transferable skill. Interface
+compliance is part of building reliable tool-using
+systems, and a prompt that teaches the expected
+wrapper can be valuable in deployment. The attri-
+bution error is to interpret that gain as evidence that
+an extracted procedure transferred across models,
+contracts, or benchmarks. Our protocol preserves
+the engineering value of format alignment while
+reserving the stronger procedural claim for residual
+evidence that survives the controls. These results
+do not invalidate BFCL or API-Bank; they show
+that gains under a fixed contract require attribution
+before being interpreted as transferable procedure.
+Acknowledgments
+This work was supported by Project 62276178 un-
+der the National Natural Science Foundation of
+China, Key Project 23KJA520012 under the Natu-
+ral Science Foundation of Jiangsu Higher Educa-
+tion Institutions, Project 24BTQ002 under the Na-
+tional Social Science Foundation of China, Project
+22YJCZH091 of the Humanities and Social Sci-
+ence Fund of the Ministry of Education, and the Pri-
+ority Academic Program Development of Jiangsu
+Higher Education Institutions.
+Limitations
+We study prompt-prepended text skills, wrapper-
+key aliasing, two-Qwen schema rotation, one
+non-BFCL API-Bank contract, Qwen3-8B/14B
+instruction-matched API-Bank baselines, and
+within-task MATH-500/MultiHop-RAG checks.
+API-Bank official-style checks remain local diag-
+nostics because unsupported-execution rows are
+excluded; cross-family tests cover Qwen3, Llama-
+3.1, and Gemma-3; the full extractor-by-demo de-
+sign covers 1.7B/8B/14B; and cells are single-run
+unless marked as extraction-seed or prompt-mode
+paired analyses. We therefore claim an attribution
+protocol and a scoped BFCL/API-Bank diagnosis,
+not a universal result about all structured-output
+benchmarks. The Spider check in Appendix A.7
+is included only as an external structured-output
+check, not as a text-to-SQL leaderboard result or a
+fourth main benchmark claim.
+References
+Kinjal Basu, Ibrahim Abdelaziz, Kiran Kate, Mayank
+Agarwal, Maxwell Crouse, Yara Rizk, Kelsey Brad-
+ford, Asim Munawar, Sadhana Kumaravel, Saurabh
+Goyal, Xin Wang, Luis A. Lastras, and Pavan Kapani-
+pathi. 2025. NESTFUL: A benchmark for evaluating
+LLMs on nested sequences of API calls. InProceed-
+ings of the 2025 Conference on Empirical Methods in
+Natural Language Processing, pages 33538–33547.
+Association for Computational Linguistics.
+
+===== PAGE 10 =====
+
+Jiaao Chen, Jingyuan Qi, Mingye Gao, Wei-Chen Wang,
+Hanrui Wang, and Di Jin. 2026. EigenData: A self-
+evolving multi-agent platform for function-calling
+data synthesis, auditing, and repair.arXiv preprint.
+Haikang Deng, Po-Nien Kung, and Nanyun Peng. 2025.
+Decoupling task-solving and output formatting in
+LLM generation.arXiv preprint.
+Shengran Hu, Cong Lu, and Jeff Clune. 2025. Auto-
+mated design of agentic systems. InInternational
+Conference on Learning Representations.
+Minghao Li, Yingxiu Zhao, Bowen Yu, Feifan Song,
+Hangyu Li, Haiyang Yu, Zhoujun Li, Fei Huang,
+and Yongbin Li. 2023. API-Bank: A comprehensive
+benchmark for tool-augmented LLMs. InProceed-
+ings of the 2023 Conference on Empirical Methods
+in Natural Language Processing, pages 3102–3116.
+Xiangyi Li, Wenbo Chen, Yimin Liu, Shenghan Zheng,
+Xiaokun Chen, Yifeng He, Yubo Li, Bingran You,
+Haotian Shen, Jiankai Sun, Shuyi Wang, Binxu Li,
+Qunhong Zeng, Di Wang, Xuandong Zhao, Yuanli
+Wang, Roey Ben Chaim, Zonglin Di, Yipeng Gao,
+and 22 others. 2026. SkillsBench: Benchmark-
+ing how well agent skills work across diverse tasks.
+arXiv preprint.
+Percy Liang, Rishi Bommasani, Tony Lee, Dimitris
+Tsipras, Dilara Soylu, Michihiro Yasunaga, Yian
+Zhang, Deepak Narayanan, Yuhuai Wu, Ananya Ku-
+mar, Benjamin Newman, Binhang Yuan, Bobby Yan,
+Ce Zhang, Christian Cosgrove, Christopher D. Man-
+ning, Christopher Re, Diana Acosta-Navas, Drew A.
+Hudson, and 31 others. 2023. Holistic evaluation of
+language models.Transactions on Machine Learning
+Research.
+Hunter Lightman, Vineet Kosaraju, Yura Burda, Harri
+Edwards, Bowen Baker, Teddy Lee, Jan Leike, John
+Schulman, Ilya Sutskever, and Karl Cobbe. 2024.
+Let’s verify step by step. InInternational Conference
+on Learning Representations.
+Qiqiang Lin, Muning Wen, Qiuying Peng, Guanyu Nie,
+Junwei Liao, Jun Wang, Xiaoyun Mo, Jiamu Zhou,
+Cheng Cheng, Yin Zhao, Jun Wang, and Weinan
+Zhang. 2024. Hammer: Robust function-calling for
+on-device language models via function masking.
+arXiv preprint.
+Zijian Lu, Yiping Zuo, Yupeng Nie, Xin He, Weibei
+Fan, Lianyong Qi, and Shi Jin. 2026. ContractSkill:
+Repairable contract-based skills for multimodal web
+agents.arXiv preprint.
+Jingwei Ni, Yihao Liu, Xinpeng Liu, Yutao Sun,
+Mengyu Zhou, Pengyu Cheng, Dexin Wang, Er-
+chao Zhao, Xiaoxi Jiang, and Guanjun Jiang. 2026.
+Trace2skill: Distill trajectory-local lessons into trans-
+ferable agent skills.arXiv preprint.
+Shishir G. Patil, Huanzhi Mao, Fanjia Yan, Char-
+lie Cheng-Jie Ji, Vishnu Suresh, Ion Stoica, and
+Joseph E. Gonzalez. 2025. The berkeley function
+calling leaderboard (BFCL): From tool use to agentic
+evaluation of large language models. InProceedings
+of the 42nd International Conference on Machine
+Learning, volume 267 ofProceedings of Machine
+Learning Research, pages 48371–48392. PMLR.
+Shishir G. Patil, Tianjun Zhang, Xin Wang, and
+Joseph E. Gonzalez. 2024. Gorilla: Large language
+model connected with massive APIs. InAdvances in
+Neural Information Processing Systems, volume 37.
+Yujia Qin, Shihao Liang, Yining Ye, Kunlun Zhu, Lan
+Yan, Yaxi Lu, Yankai Lin, Xin Cong, Xiangru Tang,
+Bill Qian, Sihan Zhao, Lauren Hong, Runchu Tian,
+Ruobing Xie, Jie Zhou, Mark Gerstein, Dahai Li,
+Zhiyuan Liu, and Maosong Sun. 2024. ToolLLM:
+Facilitating large language models to master 16000+
+real-world APIs. InInternational Conference on
+Learning Representations.
+Timo Schick, Jane Dwivedi-Yu, Roberto Dessi, Roberta
+Raileanu, Maria Lomeli, Eric Hambro, Luke Zettle-
+moyer, Nicola Cancedda, and Thomas Scialom. 2023.
+Toolformer: Language models can teach themselves
+to use tools. InAdvances in Neural Information Pro-
+cessing Systems, volume 36.
+Zhi Rui Tam, Cheng-Kuang Wu, Yi-Lin Tsai, Chieh-
+Yen Lin, Hung-yi Lee, and Yun-Nung Chen. 2024.
+Let me speak freely? a study on the impact of format
+restrictions on performance of large language models.
+arXiv preprint.
+Yixuan Tang and Yi Yang. 2024. MultiHop-RAG:
+Benchmarking retrieval-augmented generation for
+multi-hop queries. InConference on Language Mod-
+eling.
+Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Man-
+dlekar, Chaowei Xiao, Yuke Zhu, Linxi Fan, and
+Anima Anandkumar. 2023. V oyager: An open-ended
+embodied agent with large language models.arXiv
+preprint.
+Binyan Xu, Dong Fang, Haitao Li, and Kehuan Zhang.
+2026. From multi-agent to single-agent: When is
+skill distillation beneficial?arXiv preprint.
+Yiheng Xu, Dunjie Lu, Zhennan Shen, Junli Wang,
+Zekun Wang, Yuchen Mao, Caiming Xiong, and Tao
+Yu. 2025. AgentTrek: Agent trajectory synthesis via
+guiding replay with web tutorials. InInternational
+Conference on Learning Representations.
+An Yang, Anfeng Li, Baosong Yang, Beichen Zhang,
+Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao,
+Chengen Huang, Chenxu Lv, Chujie Zheng, Dayi-
+heng Liu, Fan Zhou, Fei Huang, Feng Hu, Hao Ge,
+Haoran Wei, Huan Lin, Jialong Tang, and 41 others.
+2025. Qwen3 technical report.arXiv preprint.
+Shunyu Yao, Noah Shinn, Pedram Razavi, and
+Karthik R. Narasimhan. 2025. τ-bench: A bench-
+mark for tool-agent-user interaction in real-world
+domains. InInternational Conference on Learning
+Representations.
+
+===== PAGE 11 =====
+
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak
+Shafran, Karthik R. Narasimhan, and Yuan Cao. 2023.
+ReAct: Synergizing reasoning and acting in language
+models. InInternational Conference on Learning
+Representations.
+A Full Experimental Results
+This appendix records provenance and stress tests
+rather than a second results narrative. Sections A.1–
+A.11 support the BFCL attribution chain; Sec-
+tions A.12–A.17 bound API-Bank and official-
+prompt scope; the remaining sections document
+variance, error types, compute budget, and prove-
+nance for prose summaries. The main claim does
+not require treating every appendix table as an in-
+dependent positive result.
+Appendix roadmap.
+§A.1–§A.5BFCL standard matrix, format-
+leakage ablations, canonicalized matrices,
+scorer-mechanism figures, and per-category
+effects.
+§A.6–§A.11MATH/MultiHop scope checks, Spi-
+der external structured-output check, transitions, in-
+duction variance, skill examples, and cross-family
+checks.
+§A.12–§A.13API-Bank target-native results,
+generic-control variants, strict metrics, fresh-
+execution diagnostics, unsupported-row extensions,
+and non-Qwen boundary checks.
+§A.14–§A.17Prompt-position, threshold, error-
+type decomposition, and BFCL official-prompt
+controls.
+§A.18–§A.21Extraction-seed variance, model-
+size/compute reporting, reproducibility checklist,
+and provenance for prose claims.
+Appendix BItem-level examples for key-alias
+sensitivity, format-only sufficiency, and original-
+versus-repaired skill behavior.
+A.1 Full BFCL Standard Matrix
+Table 6 reports the complete BFCL standard all-call
+scoring matrix that underlies the main-text attribu-
+tion diagnostics.
+Table 7 adds paired tests and confidence inter-
+vals for the local BFCL comparisons that support
+the main attribution claims: apparent skill gains,
+format-only versus full skill, and original versus
+repaired extraction.
+A.2 Format-Leakage Ablation Table
+Table 8 presents the ablation across nine skill con-
+ditions varying in format-leakage level (14B base-
+lines are in Table 3). For 8B, the broad gradient
+demonstrates that format leakage drives standard-
+scoring gains. Table 9 decomposes the repaired-
+extraction reversal into its two components.
+A.3 Full Standard vs. Canonicalized Matrix
+Table 10 reports standard and canonicalized∆for
+all 8×4 non-none BFCL conditions. Bold cells are
+harmful under standard scoring ( ∆std ≤ −3pp)
+but flip to neutral (|∆can|<3 pp) under canonical-
+ization.
+A.4 Scorer-Mechanism Figure Notes
+Figures 3 and 4 are placed in the main text be-
+cause they are the two most direct visual diag-
+nostics for scorer sensitivity: the scatter gives the
+global standard-vs-canonicalized view, and the key-
+distribution figure shows the wrapper-key mecha-
+nism.
+A.5 Per-Category BFCL Effects
+Table 11 decomposes the skill@235B effect by
+BFCL category. It supports the main-text claim that
+effects are subtask-selective rather than uniform
+procedural transfer.
+A.6 Full MATH-500 and MultiHop-RAG
+Matrices
+Tables 12 and 13 present the full accuracy matrices
+for MATH-500 (sympy equivalence accuracy) and
+MultiHop-RAG (F1), respectively, for all 8 models
+× 5 conditions. All MATH-500 effects are within
+±3 pp; MultiHop-RAG effects are within ±4 pp
+for 7 of 8 models (the exception is Qwen3-235B at
++5.5to+7.2pp).
+A.7 Spider Structured-Output Probe
+Table 14 reports a local Spider dev-subset
+check that tests whether the attribution proto-
+col’s interface-alignment diagnosis appears beyond
+function-calling wrappers. The check uses 300 de-
+terministic Spider rows and Qwen3-8B/14B.Strict
+execcredits only raw SQL-only outputs;Extracted-
+SQL execfirst removes prose or markdown wrap-
+pers before executing the SQL against the SQLite
+database. This is an external structured-output
+check, not an official Spider result.
+The separation is large. For Qwen3-8B, none
+scores 66.3% under extracted-SQL execution but
+
+===== PAGE 12 =====
+
+Table 6: Full BFCL accuracy matrix on our fixed 300-item BFCL-v2 JSON subset (standard all-call scoring, %,
+8 models × 5 conditions). Skill@{8B,32B,235B} inject trajectory-derived skills from the corresponding source
+model. “Contract” is our BFCL-style JSON prompt specifying thename/argumentswrapper.
+Target None Contract skill@8B skill@32B skill@235B
+0.6B 26.0 45.3 13.3 13.3 23.3
+1.7B 50.7 64.0 69.3 66.3 68.3
+4B 42.0 62.3 21.3 22.7 25.3
+8B 58.0 72.3 67.3 68.3 69.3
+14B 64.3 67.3 54.3 56.3 52.7
+32B 77.7 60.7 69.3 64.3 66.3
+30B-A3B 70.0 68.3 72.3 71.3 71.3
+235B 80.7 73.0 77.0 78.0 76.7
+Table 7: Paired statistics for the claim-bearing local BFCL comparisons. Each row compares condition A with
+condition B on the same 300 BFCL rows under standard all-call scoring. A-only and B-only count discordant
+examples;pis a two-sided exact sign test and CI is a paired bootstrap interval over item-level differences.
+Comparison (A vs B) A acc. B acc.∆pp 95% CI A-only B-onlyp
+1.7B skill vs none 68.3 50.7+17.7 [+12.7,+23.0]62 9< .001
+1.7B repaired vs skill 54.0 68.3−14.3 [−19.3,−9.7]8 51< .001
+8B skill vs none 69.3 58.0+11.3 [+7.3,+15.7]39 5< .001
+8B format-only vs skill 79.3 69.3+10.0 [+5.7,+14.3]39 9< .001
+8B repaired vs skill 50.3 69.3−19.0 [−24.0,−14.3]5 62< .001
+14B format-only vs skill 79.3 52.7+26.7 [+20.3,+33.3]99 19< .001
+14B repaired vs skill 54.7 52.7+2.0 [−3.0,+7.0]34 280.526
+−200 −100 0 100 200 300 400
+Prediction length change (chars)
+−1.00
+−0.75
+−0.50
+−0.25
+0.00
+0.25
+0.50
+0.75
+1.00
+F1 change
+Mean change
+8B: +17 chars, -0.015 F1
+32B: -27 chars, +0.021 F1
+235B: -17 chars, +0.055 F1
+Qwen3-8B
+Qwen3-32B
+Qwen3-235B
+Figure 5: Per-item MultiHop-RAG changes under
+skill@235B versus none. Small points are item-
+level prediction-length and F1 changes; large markers
+are model means. Qwen3-235B is the only notable
+MultiHop-RAG gain in this scope check.
+only 5.0% under strict raw-SQL execution; for
+Qwen3-14B, the corresponding values are 70.3%
+and 44.0%. Three independently worded SQL-
+only format prompts recover strict accuracy to
+64.7–67.0% for 8B and 70.3–70.7% for 14B, with
+100% SQL-only interface compliance. By contrast,
+procedure-only and extracted procedural prompts
+preserve extracted-SQL accuracy but usually fail
+strict interface compliance: procedure-only yields
+66.3% and 69.7% extracted-SQL execution for
+8B/14B, but 2.0% and 0.0% strict execution. Paired
+contrasts confirm that format-only is not signifi-
+cantly below full DIN-SQL skill on strict execution
+(8B: −2.3 pp, 95% CI [−5.0,0.0] ; 14B: −1.0 pp,
+95% CI [−3.0,+1.0] ), while procedure-only is
+65.0–71.7 pp below full DIN-SQL skill under strict
+execution. These results support the scoped claim
+that interface-compliance attribution is not unique
+to BFCL/API-Bank-style function-call wrappers.
+A.8 Per-Item Transition Analysis
+For each model × condition onBFCL, we tabulate
+the number of items that transition from correct
+to incorrect (regressions) and vice versa (improve-
+ments) between none and the skill condition. For
+MATH-500, regression and improvement counts
+are approximately balanced across all models and
+conditions (average imbalance about 4.5 items out
+of 470, and about 3.7 items for skill-only com-
+parisons), consistent with random rather than sys-
+tematic effects. ForBFCL, wrapper-key switch-
+ing explains a substantial subset of standard-score
+regressions, but the residual errors discussed in
+Section A.16 show that canonicalization is not a
+complete semantic evaluator.
+A.9 Induction Variance and Subset Deltas
+To quantify sensitivity to the particular demonstra-
+tions used for skill extraction, we ran 6 indepen-
+dent induction subsets for skill@235B on four
+
+===== PAGE 13 =====
+
+Table 8: Ablation: BFCL accuracy (∆ pp vs. None) for conditions varying the amount and type of format leakage.
+The pattern is not monotone: short alias or format prompts can exceed the full skill, while content-only and abstract
+prompts can still move weaker models. Thus format cues are sufficient for many gains, but residual prompt framing
+is not zero.
+Target None repaired content-only abstract skill@235B alias-only fmt-only wrong-alias shuffled raw_traj
+1.7B 50.7+3.3 +16.7 +15.0 +17.7−15.0 +2.7−41.0−31.3−4.3
+8B 58.0−7.7 +10.3 +4.7 +11.3 +15.0 +21.3−39.7 +12.7 +11.7
+14B 64.3−9.7−10.7–−11.7 +12.7 +15.0−48.3– –
+32B 77.7−10.3–−7.7−11.3–−8.0–−12.0−20.3
+235B 80.7−3.3–−7.7−4.0–+1.3–−6.7−12.0
+Table 9: 2×2 factorial decomposition (BFCL, ∆ pp vs.
+none). GPT-4o balanced entries are means over three
+balanced subsets; Qwen3-32B balanced entries are re-
+paired extractions from a balanced pool. Demo selection
+has model-dependent effects after all-call rescoring.
+Biased Balanced
+1.7B GPT-4o+17.7−1.7Qwen3-32B+13.7 +3.3
+8B GPT-4o+11.3−3.8Qwen3-32B+11.0−7.7
+14B GPT-4o−11.7−3.7Qwen3-32B+4.7−9.7
+Mean demo effect (1.7B)−14.8pp
+Mean demo effect (8B)−16.9pp
+Mean demo effect (14B)−3.2pp
+target models. We definespreadas max −min ac-
+curacy across the 6 subsets, andvariance ratioas
+spread / (expected spread under IID binomial sam-
+pling, computed as 2σ= 2
+p
+p(1−p)/n for each
+model’s mean accuracy p and n= 300 items). A
+ratio >1 indicates the extraction subsets produce
+more variance than random noise; <1 indicates
+the model is more stable than expected. The re-
+sulting spreads are 11.3 pp for 1.7B (2.0× random-
+noise scale), 11.0 pp for 8B (1.9 ×), 6.0 pp for
+32B (1.1×), and 3.3 pp for 235B (0.7 ×). The in-
+dividual subset deltas explain the interpretation:
+1.7B has original +17.7 pp but subset deltas of
+−7.3,−5.7,−6.0,−5.3,+4.0 , and −3.7 pp; 8B
+has original +11.3 pp but balanced subsets of
+−6.7,−3.0 , and −1.7 pp; 14B is sign-unstable
+across balanced subsets (+14.3,−17.3,−8.0 pp);
+32B and 235B stay negative across the available
+subsets. This result is therefore summarized in
+prose rather than printed as a separate table.
+A.10 Skill Text Examples
+To illustrate the format-aliasing mechanism quali-
+tatively, we show representative excerpts from orig-
+inal (GPT-4o) and repaired (Qwen3-32B) skills for
+the function-calling task.
+Format-only skill (concise control):
+“When making a function call, structure your
+response as a JSON object with exactly two
+top-level keys: ‘name’ (the exact function name,
+string) and ‘arguments’ (an object containing
+the required parameters). Example: {"name":
+"function_name", "arguments":
+{"param1": v1}} . Do not add any other
+keys or wrapper structure. ”
+Original skill (GPT-4o):
+“To complete function calls correctly, structure
+your response as a JSON object with "name"
+and "arguments" keys. The "name" key must
+match the function name exactly as specified in
+the tool schema. Always include all required pa-
+rameters in"arguments"... ”
+Repaired skill (Qwen3-32B):
+“When the user asks for information that requires
+a tool call, identify the correct function from the
+provided tool list and construct the call with the
+required parameters. Ensure parameter types
+match the function schema. For complex queries
+involving multiple conditions, decompose into se-
+quential calls... ”
+The original skill explicitly names the JSON
+keys ("name", "arguments"), directly trigger-
+ing the format-aliasing effect. The repaired skill
+focuses on procedural content (how to identify and
+construct calls) without naming the keys, which
+is why it produces smaller and less format-driven
+effects.
+Additional ablation conditions.Alias-only(14
+words): “If you output a function call, use the
+key "name" for the function identifier.”Wrong-
+alias(14 words): same sentence but requesting
+
+===== PAGE 14 =====
+
+Table 10: Full BFCL standard vs. canonicalized scoring matrix (∆ pp vs. None, 8 models × 4 conditions).Bold=
+harmful standard-score cells (∆std ≤ −3pp) that flip to neutral (|∆can|<3 pp) under canonicalization. Total: 15
+harmful cells, 3 flip (20%).
+Contract sk@8B sk@32B sk@235B
+Target Std Can Std Can Std Can Std Can
+0.6B+19.3 +17.7−12.7−13.3−12.7−13.3−2.7−2.7
+1.7B+13.3 +12.7 +18.7 +18.7 +15.7 +15.7 +17.7 +17.7
+4B+20.3−9.0−20.7−10.3−19.3−12.0−16.7−11.0
+8B+14.3 +4.7 +9.3 +2.7 +10.3 +3.7 +11.3 +3.7
+14B+3.0−10.3−10.0 +0.7−8.0−0.7−11.7−1.0
+32B−17.0−17.0−8.3−8.3−13.3−14.0−11.3−13.0
+30B-A3B−1.7−1.7 +2.3 +2.3 +1.3 +1.3 +1.3 +1.3
+235B−7.7−7.7−3.7−3.7−2.7−2.7−4.0−4.0
+Table 11: Per-category effect of skill@235B on BFCL
+under standard all-call scoring. Effects are subtask-
+selective rather than uniform, consistent with format
+and prompt steering.
+Target Category None skill@235B∆
+1.7B simple_python 56.6 88.7+32.1
+multiple 85.5 79.0−6.5
+parallel 8.1 14.5+6.5
+irrelevance 48.6 75.7+27.1
+8B simple_python 63.2 89.6+26.4
+multiple 79.0 85.5+6.5
+parallel 8.1 0.0−8.1
+irrelevance 75.7 85.7+10.0
+4B simple_python 25.5 12.3−13.2
+multiple 85.5 77.4−8.1
+parallel 9.7 4.8−4.8
+irrelevance 57.1 17.1−40.0
+14B simple_python 66.0 45.3−20.8
+multiple 87.1 69.4−17.7
+parallel 37.1 33.9−3.2
+irrelevance 65.7 65.7+0.0
+"function" instead.Content-only: the full ex-
+tracted skill with all JSON format tokens (key
+names, braces, examples) removed, retaining only
+procedural instructions (200 words).Abstract: a
+summary of the skill’s high-level principles without
+any JSON key names or format examples.Shuffled:
+the full skill with step ordering randomized but all
+key tokens preserved.Raw trajectory: verbatim
+successful function-call outputs from the source
+model, without any distillation.
+A.11 Cross-Family Validation
+Table 15 presents the full cross-family results dis-
+cussed in Section 4.4, showing that format-only out-
+performs the full skill across the seven-model suite
+under standard scoring, and that Qwen3-extracted
+skills reduce scores for smaller Gemma models.
+Alias-boundary sensitivity supports reading
+these rows as interface-alignment evidence rather
+than portable procedural transfer. For Qwen3-
+8B, accepting the current key aliases reduces the
+skill@235B delta from +11.3 to +3.7 pp and
+the format-only delta from +21.3 to +11.7 pp.
+For Llama-3.1-70B, the striking strict format-only
+gain (+65.0 pp) falls to +5.7 pp after alias expan-
+sion, showing that most of the standard-score gain
+is wrapper-contract alignment. Gemma rows are
+more model-dependent, but format-only explains
+the pattern better than transfer of Qwen3-derived
+procedures.
+A.12 API-Bank Results
+The full API-Bank native matrix shows why cross-
+contract checks are necessary: API-Bank rewards
+its own bracketed API-call contract, so BFCL-
+style JSON cues can look harmful until predictions
+are deterministically transcoded back to the native
+API-Bank surface. Weighted native API/required-
+parameter match is 50.2% for none, 50.7% for the
+native API cue, only 7.5% for the BFCL JSON
+cue, and 51.0% after prediction-only BFCL-to-
+API transcoding. The level-wise rows follow the
+same pattern: BFCL JSON is near zero for most
+1.7B/14B/32B rows and low even for 8B, while
+deterministic transcoding restores native scores to
+the no-skill/API-cue range. This check is therefore
+summarized here rather than printed as another full
+matrix.
+A.13 API-Bank Target-Native Skill Boundary
+Table 16 is the central API-Bank boundary ta-
+ble. It uses a source-file-held-out split and com-
+pares the extracted API-Bank skill with a length-
+matched generic procedural prompt under the na-
+tive API/required parameter metric.
+The near-parity does not depend on one generic
+wording: four generic procedural variants remain
+within −0.9 to +0.4 pp of skill@32B under the
+native metric. Paired native transitions are also
+
+===== PAGE 15 =====
+
+Table 12: Full MATH-500 accuracy (%, sympy equivalence, 8 models× 5 conditions). All effects are within ±3 pp,
+consistent with a null effect for symbolic reasoning.
+Target None Contract skill@8B skill@32B skill@235B
+0.6B 41.5 40.0 41.9 43.4 41.9
+1.7B 64.3 64.5 64.5 65.5 63.4
+4B 73.2 72.8 73.0 72.8 73.0
+8B 75.1 74.0 73.2 74.7 74.7
+14B 77.7 76.4 77.9 78.3 76.4
+32B 78.5 77.0 79.8 77.9 78.7
+30B-A3B 78.5 75.7 79.6 79.6 79.1
+235B 75.3 72.6 78.1 75.3 75.7
+Table 13: Full MultiHop-RAG F1 (%, 8 models × 5 conditions). Under skill@{8B,32B,235B} conditions, 7 of 8
+models are within ±4 pp; the sole exception is Qwen3-235B. The BFCL-contract prompt condition shows larger
+effects for some models.
+Target None Contract skill@8B skill@32B skill@235B
+0.6B 0.4 0.5 0.3 0.4 0.4
+1.7B 15.1 1.4 15.4 14.3 12.7
+4B 11.5 30.7 12.3 9.5 9.4
+8B 31.6 31.3 29.7 28.4 30.0
+14B 31.9 31.7 31.8 31.6 32.2
+32B 33.7 32.2 33.7 34.2 35.8
+30B-A3B 34.4 32.8 31.8 32.0 32.9
+235B 34.4 39.3 41.6 40.4 39.9
+small, at most one net skill-favoring item per level
+for Qwen3-8B and Qwen3-14B. Stricter parameter-
+set matching leaves generic variants closely paired
+with skill@32B, with generic-minus-skill net
+transitions from −4 to +2 out of 454 held-out
+examples. Row-fresh local official-style execu-
+tion likewise keeps the best generic prompt within
+0.6 pp on Qwen3-8B and 0.4 pp on Qwen3-14B,
+and all paired intervals include zero. Unsupported-
+row execution, contract surgery, non-Qwen transfer,
+and upstream-style prompt variants are boundary
+checks with the same interpretation: the target-
+native API-Bank gain is real, but the residual over
+generic procedural guidance is small, unstable, or
+model-dependent rather than clear evidence of ex-
+tracted procedural transfer.
+A.14 Prompt Position Ablation
+We also test whether the format-scaffolding mecha-
+nism depends on where the skill text is placed in the
+prompt. For 14B, the format-only advantage over
+full skill is preserved in both slots: +26.7 pp in the
+system message and +33.0 pp in the user prefix.
+For 8B, both placements preserve the advantage,
+although the gap narrows from +10.0 pp in the
+system position to +3.7 pp in the user prefix. The
+effect is therefore position-sensitive in magnitude
+but is not an artifact of a single prompt slot.
+A.15 Threshold Sensitivity for Harmful-Cell
+Flip Rate
+Varying the neutral-band threshold does not change
+the interpretation. With T= 2 , 3, and 5 pp, the
+harmful-cell flip rates are 3/17 (18%), 3/15 (20%),
+and 3/13 (23%), respectively. Thus key-alias canon-
+icalization explains an important subset of harms,
+notably for 14B, but it does not absorb all interface-
+or prompt-induced failures.
+A.16 Error Type Breakdown
+We decompose BFCL errors for 1.7B, 8B, and
+14B under none and skill@235B. “Alias-only”
+means standard scoring is wrong while canonical-
+ized scoring is correct. For 14B, skill injection
+increases alias-only errors from 40 to 72; for 8B, it
+decreases alias-only errors from 29 to 6 and raises
+correct all-call answers from 174 to 208. This is
+consistent with skill injection changing format com-
+pliance more directly than function-calling compe-
+tence.
+As an additional local audit, we rescored the ex-
+isting BFCL outputs with a required-content diag-
+nostic that requires the correct call count, function
+names, and ground-truth parameter values while ig-
+noring unsupported extra predicted parameters. On
+the analyzed files, this diagnostic exactly matches
+BFCL-CANONICAL; no displayed main Qwen or
+
+===== PAGE 16 =====
+
+Model ConditionnStrict exec Extracted-SQL exec SQL-only output
+14B Full SQL skill 300 71.7 71.7 100.0
+14B Extracted skill 300 2.0 70.0 3.0
+14B Format-only 300 70.7 70.7 100.0
+14B None 300 44.0 70.3 58.7
+14B Procedure-only 300 0.0 69.7 0.0
+8B Full SQL skill 300 67.0 67.0 100.0
+8B Extracted skill 300 25.7 63.0 32.0
+8B Format-only 300 64.7 64.7 100.0
+8B None 300 5.0 66.3 5.7
+8B Procedure-only 300 2.0 66.3 2.7
+Table 14: Spider structured-output attribution probe. Strict execution credits only raw SQL-only outputs; extracted-
+SQL execution first removes markdown or prose wrappers. The probe is an external structured-output sanity check,
+not an official Spider leaderboard result.
+Table 15:Cross-family validation on BFCL.Qwen3-extracted skill@235B and the format_only specifica-
+tion are applied unchanged to Llama-3.1 and Gemma-3 models. ∆ is versus each model’s none baseline;bold
+marks the larger standard-score gain per row.
+Standard Scoring (%)∆vs. None (pp)
+Family Model Noneskill@235B fmt_only skill@235B fmt_only name%
+Qwen3 8B 58.0 69.3 79.3+11.3 +21.348%
+Qwen3 32B 77.7 66.3 69.7−11.3−8.089%
+Llama-3.1 8B 45.3 62.0 62.7+16.7 +17.337%
+Llama-3.1 70B 22.3 23.3 87.3+1.0 +65.01%
+Gemma-3 4B 51.3 22.7 60.3−28.7 +9.063%
+Gemma-3 12B 38.3 22.3 70.0−16.0 +31.70%
+Gemma-3 27B 26.7 28.3 64.3+1.7 +37.716%
+name% is the fraction of none predictions using the evaluator-expected name JSON key. Format-only exceeds the full skill in
+all five non-Qwen rows and both Qwen anchor rows after all-call rescoring; Appendix A.11 explains the alias-boundary
+sensitivity.
+Table 16: API-Bank target-native skill boundary under
+source-file-held-out evaluation. The metric is native
+API/required-parameter match (%). The generic row is
+a length-matched, hand-written procedural instruction,
+so the final delta is the conservative residual over the
+generic prompt. Interpretation: the weighted residual
+over the generic prompt is only +0.2 pp for 8B and
++0.4 pp for 14B, so the target-native gain is almost en-
+tirely reproduced by generic procedural guidance.
+Model Level None API cue Generic API skill∆skill–gen.
+8B 1 50.0 53.8 76.2 75.6−0.6
+8B 2 55.7 57.2 78.9 79.4+0.5
+8B 3 45.0 43.0 43.0 44.0+1.0
+14B 1 50.6 47.5 75.0 75.6+0.6
+14B 2 54.6 53.1 78.4 78.4+0.0
+14B 3 41.0 40.0 44.0 45.0+1.0
+8B weighted 51.3 52.9 70.0 70.3+0.2
+14B weighted 50.2 48.2 69.6 70.0+0.4
+cross-family condition has an extra-argument-only
+residual. ThusBFCL-CANONICALis not gaining
+credit by forgiving extra predicted parameters in
+this subset, although it remains a local diagnostic
+rather than official execution.
+We further audit the same outputs by explicitly
+decoding model strings into function calls, then
+applying the upstream BFCL AST checker for
+callable categories and the no-call rule for irrele-
+vance. Across the 12 main Qwen rows, local canon-
+ical and official-AST canonical scores differ by at
+most 1.7 pp, with 98.0–99.3% item-level agree-
+ment. This supports usingBFCL-CANONICALas a
+Qwen-row diagnostic rather than a custom value-
+checker artifact. It is not an official leaderboard
+rescore because call decoding remains local, and
+it should not be generalized to all families: Llama-
+3.1-70B has stricter type/value failures under the
+official AST checker, with official-AST canonical
+scores 7.3–20.3 pp below local canonical scores.
+A.17 BFCL Official-Prompt Controls
+The official-prompt controls are boundary checks,
+not a second main-results section. They ask
+whether the attribution survives under a BFCL
+prompt contract closer to upstream usage. On a
+300-row non-live Qwen subset, Qwen3-8B and
+
+===== PAGE 17 =====
+
+Qwen3-14B are near ceiling and skill@235B
+has no reliable paired advantage over no-skill,
+official-format, or neutral prompts. On the full
+1,040-row non-Qwen prompt-mode check, Llama-
+3.1-8B does not preserve the Qwen-derived skill
+advantage: skill@235B is 0.9 pp below no-
+skill and 1.9 pp below official-format, with the
+latter paired comparison significant. Gemma-3-
+4B remains a model-specific boundary case, with
+skill@235B above no-skill by 3.1 pp and above
+official-format and neutral controls by 9.6 and
+7.9pp.
+The stronger procedure-only control gives
+generic function-calling task-policy advice with-
+out wrapper-key or JSON contract cues. Across
+Qwen3-1.7B, 8B, and 14B, it does not create a
+positive residual for the extracted skill: procedure-
+only is 0.7 pp below skill@235B on 1.7B, ex-
+actly tied with skill@235B and no-skill on
+8B, and 0.4 pp below skill@235B on 14B;
+all paired comparisons with skill@235B are
+non-significant. Additional multi-neutral, prompt-
+variant, repaired-source, content-only, larger-
+Qwen, and same-family Llama audits follow the
+same pattern. Once the upstream-style prompt al-
+ready states the output contract, any remaining skill
+effect is small, model-dependent, recoverable by
+matched neutral wording, or matched by generic
+procedure advice.
+A.18 Extraction Seed Variance
+Across three balanced extraction seeds, the mean
+direction is negative for 1.7B, 8B, 32B, and
+235B, while 14B shows high variance with a
+31.7 pp spread. This robustness check supports
+the repaired/balanced-induction interpretation: the
+original gains are not stable once the demonstration
+pool is controlled, and the 14B sensitivity is con-
+sistent with a capability tipping point where small
+changes in skill content produce large effects.
+A.19 Model Size and Compute Budget
+The open-weight evaluation models are Qwen3
+0.6B, 1.7B, 4B, 8B, 14B, 32B, 30B-A3B, and
+235B-A22B; Llama-3.1 8B/70B; and Gemma-3
+4B/12B/27B. Original skills use GPT-4o for induc-
+tion; because GPT-4o is a closed API model, its
+parameter count and provider-side compute are not
+publicly reported. We do not train or fine-tune
+any model. All open-weight runs are inference-
+only, use temperature 0, and run on an internal
+NVIDIA H200 GPU cluster. The retained JSON
+traces contain 155,484 item-level generations with
+121.6 hours of summed per-item generation wall
+time. This is a trace-level budget proxy rather than
+a scheduler-normalized GPU-hour total, because
+legacy artifacts do not consistently record tensor-
+parallel allocation, queueing, or scoring overhead.
+A.20 Reproducibility Checklist
+The release retains the data subsets, prompt/skill
+texts, raw generations, score files, and analysis
+scripts needed to regenerate the reported diag-
+nostics: BFCL local and official-prompt audits,
+API-Bank native and row-fresh checks, the Spi-
+der structured-output check, and the displayed ta-
+bles and paired statistics. Legacy GPT-4o extrac-
+tion traces are treated as audited historical inputs
+rather than token-replay targets because provider-
+side model parameters and compute are not public.
+A.21 Claim Audit: Prose-Only Statistics
+Compact prose statistics are derived from the dis-
+played result matrices and retained analysis outputs:
+the format-shift regression uses the 8-point Qwen3
+BFCL-Contract key-shift analysis; harmful-cell
+flips use the full standard-vs-canonicalized matrix;
+repaired and balanced effects use the induction-
+subset tables; API-Bank transcode recovery and
+target-native residuals use the source-file-held-out
+API-Bank diagnostics; and cross-family mean ab-
+solute effects use the seven-model cross-family
+suite. These provenance links are included to make
+the compact prose claims auditable without adding
+more appendix tables.
+
+===== PAGE 18 =====
+
+B Item-Level Qualitative Case Studies
+This appendix keeps only representative item-level
+checks for the mechanisms analyzed in Section 4.3.
+The aggregate evidence is in the main text and Ap-
+pendix A.1–A.17; the examples below are included
+to make the error modes concrete rather than to
+introduce additional claims.
+Key-alias sensitivity.Qwen3-14B provides a
+direct example of scorer-side aliasing. With-
+out an injected skill, the model often emits
+BFCL-compatible calls using "name" and a
+parameter object. After skill@235B is in-
+jected, many otherwise identical calls switch to
+"function_name", a wrapper key that the stan-
+dard BFCL-style scorer rejects. On a math.gcd
+item, for example, both predictions choose the
+same function and arguments {"num1": 12,
+"num2": 15} ; only the outer wrapper key
+changes. This pattern is systematic: 35 of 48
+standard-score regressions become correct un-
+der canonicalized scoring, and 38 regressions in-
+volve a "name"→"function_name" switch.
+The item-level failure is therefore not a wrong
+procedure or wrong argument extraction, but a
+benchmark-interface mismatch.
+Format-only sufficiency.Qwen3-8B shows the
+complementary positive case. On one compound-
+interest item, both none and full skill@235B
+produce a bare JSON argument object with the
+right values but no function-name wrapper, so both
+are marked wrong. The format_only prompt,
+which strips procedural SOP text and keeps only
+the output wrapper template, produces the correct
+wrapped call. On a portfolio-future-value item,
+both skill@235B and format_only are cor-
+rect, differing only in whether the payload key
+is "parameters" or "arguments". Across
+all 300 local BFCL items, format_only is cor-
+rect where skill@235B is wrong on 39 items,
+while the reverse happens on only 9 items; ag-
+gregate accuracy is 58.0% for none, 69.3% for
+skill@235B, and 79.3% forformat_only.
+Original versus repaired skill.The repaired-
+skill comparison shows the same mechanism from
+the opposite direction. The original skill@235B
+was induced from demonstrations that happen to
+use BFCL-compatible "name"/"arguments"
+wrappers. The repaired skill uses same-family
+Qwen3 demonstrations and no longer carries that
+benchmark-aligned format cue. On a case-lookup
+item, the original skill changes the 8B model
+from an incorrect "function" wrapper to the ac-
+cepted "name" wrapper; the repaired skill drops
+the wrapper again even though the argument val-
+ues remain semantically right. A prime-factor item
+has the same shape. Across all 300 items, original
+skill@235B is correct where the repaired skill
+is wrong on 62 items, while the reverse occurs on
+only 5 items (12.4:1). This explains why original
+skill@235B reaches 69.3% on 8B but repaired
+skill@235B falls to 50.3%, below the 58.0%
+no-skill baseline.

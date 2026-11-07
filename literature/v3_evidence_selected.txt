@@ -1,0 +1,3231 @@
+
+
+===== https://docs.x.ai/build/overview =====
+PROMPT: Extract ALL concrete, actionable engineering details: installation commands, system requirements, authentication flow, config.toml full schema and every field, custom model / base_url setup, supported API formats, CLI commands and flags, skills, MCP support, and any stated limitations. Also list the URLs of sibling documentation pages shown in the navigation.
+**标题**: Grok Build: SpaceXSI's Coding Agent | SpaceXSI Docs
+
+#### [Getting Started](https://docs.x.ai/build/overview#getting-started)
+
+# [Grok Build](https://docs.x.ai/build/overview#grok-build)
+
+[Create API key](https://console.x.ai/team/default/api-keys?utm_source=docs&utm_medium=referral&utm_campaign=build-overview&utm_content=article-api-key)[Meet grok-4.7](https://x.ai/news/grok-4-7)
+
+Grok Build is a powerful and extensible coding agent. Use it via an interactive TUI, headlessly in scripts or bots, or through the Agent Client Protocol (ACP) in other apps.
+
+The TUI provides a rich, mouse-interactive, fullscreen experience for coding with agents.
+
+## [Install](https://docs.x.ai/build/overview#install)
+
+macOS / Linux / WSLWindows (PowerShell)
+
+```
+curl -fsSL https://x.ai/cli/install.sh | bash
+```
+
+```
+irm https://x.ai/cli/install.ps1 | iex
+```
+
+## [Start an interactive session](https://docs.x.ai/build/overview#start-an-interactive-session)
+
+Bash
+
+```
+cd your-project
+grok
+```
+
+On first launch, Grok opens a browser for authentication. In non-browser environments, use an API key:
+
+Bash
+
+```
+export XAI_API_KEY="xai-..."
+grok
+```
+
+Useful first prompts:
+
+Text
+
+```
+Explain this repo.
+@src/main.rs Walk me through this file.
+```
+
+## [Run headlessly](https://docs.x.ai/build/overview#run-headlessly)
+
+Bash
+
+```
+grok -p "Explain this codebase"
+grok -p "Explain the architecture" --output-format streaming-json
+```
+
+Headless usage is ideal for scripts, automations, or integration into other apps.
+
+## [Custom models](https://docs.x.ai/build/overview#custom-models)
+
+Grok supports any custom model. Add it to your user-level config file, `~/.grok/config.toml` (on Windows, `%USERPROFILE%\.grok\config.toml`):
+
+Text
+
+```
+[model.my-model]
+model = "model-id"
+base_url = "https://api.example.com/v1"
+name = "Display Name"
+env_key = "API_KEY"
+
+[models]
+default = "my-model"
+```
+
+After updating `~/.grok/config.toml`, use `grok inspect` to see what Grok discovered in the current directory, including config sources, instructions, skills, plugins, hooks, and MCP servers, then pick the model in headless mode or in the TUI:
+
+Bash
+
+```
+grok inspect
+grok -p "Hello" -m my-model
+```
+
+You can also switch inside the TUI with `/model <name>`.
+
+## [Use Grok 4.7 on the API](https://docs.x.ai/build/overview#use-grok-47-on-the-api)
+
+[`grok-4.7`](https://docs.x.ai/developers/models/grok-4.7), SpaceXSI's latest model, is available directly on the xAI API. Drop it into your own agent loop, IDE integration, or coding tool.
+
+JavaScriptPython (OpenAI)Bash Python
+
+```
+import { xai } from '@ai-sdk/xai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: xai.responses('grok-4.7'),
+  prompt: 'Fix this function and explain the bug: function median(a){a.sort();return a[a.length/2]}',
+});
+
+console.log(text);
+```
+
+```
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="<YOUR_XAI_API_KEY_HERE>",
+    base_url="https://api.x.ai/v1",
+)
+
+response = client.responses.create(
+    model="grok-4.7",
+    input="Fix this function and explain the bug: function median(a){a.sort();return a[a.length/2]}",
+)
+
+print(response.output_text)
+```
+
+```
+curl https://api.x.ai/v1/responses \
+  -H "Authorization: Bearer $XAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-4.7",
+    "input": "Fix this function and explain the bug: function median(a){a.sort();return a[a.length/2]}"
+  }'
+```
+
+```
+import os
+from xai_sdk import Client
+from xai_sdk.chat import user
+
+client = Client(api_key=os.getenv("XAI_API_KEY"))
+
+chat = client.chat.create(model="grok-4.7")
+chat.append(user("Fix this function and explain the bug: function median(a){a.sort();return a[a.length/2]}"))
+
+print(chat.sample().content)
+```
+
+## [Features](https://docs.x.ai/build/overview#features)
+
+- [Status Line](https://docs.x.ai/build/features/status-line). Live session context in a row at the bottom of the TUI.
+- [Skills, Plugins & Marketplaces](https://docs.x.ai/build/features/skills-plugins-marketplaces)
+- [Modes and Commands](https://docs.x.ai/build/modes-and-commands)
+
+## [Next](https://docs.x.ai/build/overview#next)
+
+- [Headless & Scripting](https://docs.x.ai/build/cli/headless-scripting)
+- [Enterprise Deployments](https://docs.x.ai/build/enterprise)
+- [Grok Bot](https://docs.x.ai/grok-bot/overview) — AI teammates on a cloud computer
+
+
+===== https://docs.openclaw.ai/start/getting-started =====
+PROMPT: Extract the complete installation and first-run procedure verbatim where possible: prerequisites (OS, Node version, package manager), exact install commands, onboarding/wizard steps, config file location and format, gateway start command, how to connect a model provider, and troubleshooting notes. Also list sibling doc page URLs from navigation.
+**标题**: Getting started - OpenClaw
+
+On this pageWhat you need
+
+First steps
+
+# Getting started
+
+Install OpenClaw, run onboarding, and chat with your AI assistant in about 5 minutes. By the end you will have a running Gateway, configured auth, and a working chat session.
+
+## What you need
+
+- **Node.js 24.16.0+ on 24.x, or 26.1.0+** (Node 26 is recommended; use 24.22.1+/26.12.1+ for the security fixes)
+- **An existing Claude Code or Codex CLI login, or a provider API key** — onboarding can reuse it
+
+**Tip**
+
+Check your Node version with `node --version`. **Windows users:** the native Windows Hub app is the easiest desktop path. The PowerShell installer and WSL2 Gateway paths are also supported. See [Windows](https://docs.openclaw.ai/platforms/windows). Need to install Node? See [Node setup](https://docs.openclaw.ai/install/node).
+
+## Try it in one command
+
+bashCopy code
+
+```bash
+npx openclaw@latest
+```
+
+On a fresh install, choose **Quick start** after a one-line pointer to the [security guide](https://docs.openclaw.ai/gateway/security). That is the only onboarding prompt when usable AI access is already available: OpenClaw finds an existing Claude Code or Codex CLI login or API key, verifies it with a real completion, saves the config, and opens the web dashboard.
+
+Quick start then asks **Keep OpenClaw running in the background?** Yes installs a copy of the same OpenClaw version under `~/.openclaw` and runs the Gateway as a background service from it, so clearing the npx cache does not stop it. No keeps the Gateway in this terminal until you press **Ctrl+C**; your config stays saved. If no detected route works, onboarding opens manual provider setup. Choose **Custom setup** to walk through all guided options instead.
+
+To keep the Gateway running in the background later, install the CLI below and run `openclaw gateway install`, then `openclaw gateway start` to wait until it is ready. Run `openclaw` for the TUI or `openclaw dashboard` to reopen the web UI.
+
+## Quick setup
+
+### Install OpenClaw
+
+### macOS / Linux
+
+bashCopy code
+
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+### Windows (PowerShell)
+
+powershellCopy code
+
+```powershell
+iwr -useb https://openclaw.ai/install.ps1 | iex
+```
+
+**Note**
+
+Other install methods (Docker, Nix, npm): [Install](https://docs.openclaw.ai/install).
+
+### Complete onboarding
+
+The installer starts the guided onboarding wizard automatically. Choose **Quick start** to reuse detected AI access and open the dashboard, or **Custom setup** for the full guided flow. Provider sign-in and optional setup can take longer. Return later with `openclaw configure` for additional settings. `openclaw onboard --classic` opens the classic step-by-step wizard instead.
+
+See [Onboarding (CLI)](https://docs.openclaw.ai/start/wizard) for the full reference.
+
+### Install the Gateway service
+
+Quick start asks **Keep OpenClaw running in the background?** and installs the service when you accept, so skip this step in that case. Otherwise, press **Ctrl+C** to stop the foreground Gateway, then install the service and wait for it to be ready:
+
+bashCopy code
+
+```bash
+openclaw gateway installopenclaw gateway start
+```
+
+This installs a LaunchAgent on macOS, a systemd user unit on Linux and WSL2, or a Scheduled Task on native Windows (with a per-user Startup-folder login item as the fallback if task creation is denied). Your config stays saved across the stop and the install.
+
+`gateway install` returns once the service is registered, while the Gateway may still be starting. `gateway start` waits until the Gateway passes its health and readiness checks; it does not restart a Gateway that is already running.
+
+### Verify the Gateway is running
+
+bashCopy code
+
+```bash
+openclaw gateway status
+```
+
+You should see the Gateway listening on port 18789.
+
+### Open the dashboard
+
+bashCopy code
+
+```bash
+openclaw dashboard
+```
+
+This opens the Control UI in your browser. If it loads, everything is working.
+
+### Send your first message
+
+Type a message in the Control UI chat and you should get an AI reply.
+
+Want to chat from your phone instead? The fastest channel to set up is [Telegram](https://docs.openclaw.ai/channels/telegram) (just a bot token). See [Channels](https://docs.openclaw.ai/channels) for all options.
+
+Advanced: mount a custom Control UI build
+
+If you maintain a localized or customized dashboard build, point `gateway.controlUi.root` to a directory that contains your built static assets and `index.html`.
+
+bashCopy code
+
+```bash
+mkdir -p "$HOME/.openclaw/control-ui-custom"# Copy your built static files into that directory.
+```
+
+Then set:
+
+jsonCopy code
+
+```json
+{  "gateway": {    "controlUi": {      "enabled": true,      "root": "${HOME}/.openclaw/control-ui-custom"    }  }}
+```
+
+Restart the gateway and reopen the dashboard:
+
+bashCopy code
+
+```bash
+openclaw gateway restartopenclaw dashboard
+```
+
+## If setup does not work
+
+One command turns the current state of your install into a diagnosis you can act on:
+
+bashCopy code
+
+```bash
+openclaw triage
+```
+
+It runs read-only health checks, writes a sanitized prompt describing what it found, and then offers to hand that prompt to a coding agent it detects on your machine — Claude Code, Codex CLI, or the built-in OpenClaw agent — so the agent starts with the diagnosis already loaded. Pick "just print the commands" if you would rather run the handoff yourself.
+
+Nothing leaves your machine until you choose an agent, and secrets, tokens, raw chat payloads, and raw logs are excluded from the prompt.
+
+To read the findings yourself instead, run [`openclaw doctor`](https://docs.openclaw.ai/cli/doctor). For symptom-first routes, see [Troubleshooting](https://docs.openclaw.ai/help/troubleshooting).
+
+## What to do next
+
+[**Connect a channel**  
+\
+Discord, Feishu, iMessage, Matrix, Microsoft Teams, Signal, Slack, Telegram, WhatsApp, Zalo, and more.](https://docs.openclaw.ai/channels)
+
+[**Pairing and safety**  
+\
+Control who can message your agent.](https://docs.openclaw.ai/channels/pairing)
+
+[**Configure the Gateway**  
+\
+Models, tools, sandbox, and advanced settings.](https://docs.openclaw.ai/gateway/configuration)
+
+[**Browse tools**  
+\
+Browser, exec, web search, skills, and plugins.](https://docs.openclaw.ai/tools)
+
+Advanced: environment variables
+
+If you run OpenClaw as a service account or want custom paths:
+
+- `OPENCLAW_HOME` — home directory for internal path resolution
+- `OPENCLAW_STATE_DIR` — override the state directory
+- `OPENCLAW_CONFIG_PATH` — override the config file path
+
+Full reference: [Environment variables](https://docs.openclaw.ai/help/environment).
+
+- [Install overview](https://docs.openclaw.ai/install)
+- [Channels overview](https://docs.openclaw.ai/channels)
+- [Setup](https://docs.openclaw.ai/start/setup)
+- [Personal assistant setup](https://docs.openclaw.ai/start/openclaw) - end-to-end guide to a dedicated number that behaves like an always-on assistant
+- [Triage](https://docs.openclaw.ai/cli/triage)
+- [Troubleshooting](https://docs.openclaw.ai/help/troubleshooting)
+- [Get support](https://docs.openclaw.ai/help/support) - official OpenClaw support and reporting routes
+
+
+===== https://docs.openclaw.ai/providers/ollama =====
+PROMPT: Extract the complete Ollama provider configuration: the exact config keys and JSON/TOML/YAML example, baseUrl warning about /v1, model IDs, context length settings, tool calling notes, and every listed failure mode and its recommended fix. Quote the relevant sentences.
+**标题**: Ollama - OpenClaw
+
+On this pageWhere each section moved
+
+Providers
+
+# Ollama
+
+OpenClaw talks to Ollama's native API (`/api/chat`), not the OpenAI-compatible `/v1` endpoint. Three setups are supported:
+
+Setup What it uses Cloud + Local A reachable Ollama host, serving local models and (if signed in) `:cloud` models Local only A reachable Ollama host, local models only Ollama Cloud `https://ollama.com` directly through the `ollama-cloud` provider, no daemon
+
+Hosted-only access is its own **Ollama Cloud** setup choice; see [Ollama Cloud](https://docs.openclaw.ai/providers/ollama-cloud). Its `ollama-cloud/<model>` refs keep cloud routing separate from the local `ollama` provider.
+
+**Warning**
+
+Do not use the `/v1` OpenAI-compatible URL (`http://host:11434/v1`). It breaks tool calling and models can emit raw tool-call JSON as plain text. Use the native URL: `baseUrl: "http://host:11434"` (no `/v1`).
+
+The current config key is `baseUrl`. `baseURL` is also accepted for OpenAI-SDK-style examples, but new config should use `baseUrl`.
+
+This page is an index. Ollama is documented on nine pages, one per reader job. Open the page that matches your task.
+
+Page Read it when [Ollama setup](https://docs.openclaw.ai/providers/ollama/setup) You are connecting an account: auth rules per host type, onboarding and manual setup, and the hybrid cloud-plus-local flow. [Ollama model discovery](https://docs.openclaw.ai/providers/ollama/model-discovery) You want to know how models are found: the implicit-discovery table, capability detection, and smoke-test checks. [Ollama node-local inference](https://docs.openclaw.ai/providers/ollama/node-local-inference) You are running models on a paired node: setup steps, model filtering, and direct verification commands. [Ollama vision and image description](https://docs.openclaw.ai/providers/ollama/vision) You are describing or understanding images through a local or hosted Ollama vision model. [Ollama configuration](https://docs.openclaw.ai/providers/ollama/configuration) You are writing the provider entry: implicit discovery, an explicit model list, or a custom base URL. [Ollama config recipes](https://docs.openclaw.ai/providers/ollama/recipes) You want a working config to copy: per-scenario recipes, model selection, and quick verification. [Ollama Web Search](https://docs.openclaw.ai/providers/ollama/web-search) You are using Ollama as the `web_search` provider: host, auth, and requirement rules. [Ollama advanced configuration](https://docs.openclaw.ai/providers/ollama/advanced) You are tuning behavior: context windows, thinking control, reasoning, costs, embeddings, and streaming. [Ollama troubleshooting](https://docs.openclaw.ai/providers/ollama/troubleshooting) Something is broken: detection, connection, tool-JSON, garbled output, timeouts, and WSL2 crash loops.
+
+## Where each section moved
+
+Every anchor the single-page version published still resolves here, so an existing link such as `/providers/ollama#node-local-inference` keeps working. Each entry points at the page that now holds the content.
+
+[**Ollama setup**](https://docs.openclaw.ai/providers/ollama/setup)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Auth rules](https://docs.openclaw.ai/providers/ollama/setup#auth-rules)
+- [](https://docs.openclaw.ai/providers/ollama)[Getting started](https://docs.openclaw.ai/providers/ollama/setup#getting-started)
+- [](https://docs.openclaw.ai/providers/ollama)[Cloud models through a local host](https://docs.openclaw.ai/providers/ollama/setup#cloud-models-through-a-local-host)
+- [](https://docs.openclaw.ai/providers/ollama)[Local and LAN hosts](https://docs.openclaw.ai/providers/ollama/setup#local-and-lan-hosts)
+- [](https://docs.openclaw.ai/providers/ollama)[Remote and Ollama Cloud hosts](https://docs.openclaw.ai/providers/ollama/setup#remote-and-ollama-cloud-hosts)
+- [](https://docs.openclaw.ai/providers/ollama)[Custom provider ids](https://docs.openclaw.ai/providers/ollama/setup#custom-provider-ids)
+- [](https://docs.openclaw.ai/providers/ollama)[Auth profiles](https://docs.openclaw.ai/providers/ollama/setup#auth-profiles)
+- [](https://docs.openclaw.ai/providers/ollama)[Memory embedding scope](https://docs.openclaw.ai/providers/ollama/setup#memory-embedding-scope)
+- [](https://docs.openclaw.ai/providers/ollama)[Onboarding (recommended)](https://docs.openclaw.ai/providers/ollama/setup#onboarding-recommended)
+- [](https://docs.openclaw.ai/providers/ollama)[Run onboarding](https://docs.openclaw.ai/providers/ollama/setup#run-onboarding)
+- [](https://docs.openclaw.ai/providers/ollama)[Select a model](https://docs.openclaw.ai/providers/ollama/setup#select-a-model)
+- [](https://docs.openclaw.ai/providers/ollama)[Verify](https://docs.openclaw.ai/providers/ollama/setup#verify)
+- [](https://docs.openclaw.ai/providers/ollama)[Manual setup](https://docs.openclaw.ai/providers/ollama/setup#manual-setup)
+- [](https://docs.openclaw.ai/providers/ollama)[Install and start Ollama](https://docs.openclaw.ai/providers/ollama/setup#install-and-start-ollama)
+- [](https://docs.openclaw.ai/providers/ollama)[Set a credential](https://docs.openclaw.ai/providers/ollama/setup#set-a-credential)
+- [](https://docs.openclaw.ai/providers/ollama)[Select the model](https://docs.openclaw.ai/providers/ollama/setup#select-the-model)
+
+[**Ollama model discovery**](https://docs.openclaw.ai/providers/ollama/model-discovery)
+
+- [](https://docs.openclaw.ai/providers/ollama)[](https://docs.openclaw.ai/providers/ollama)[Model discovery (implicit provider)](https://docs.openclaw.ai/providers/ollama/model-discovery#model-discovery-implicit-provider)
+- [](https://docs.openclaw.ai/providers/ollama)[Smoke tests](https://docs.openclaw.ai/providers/ollama/model-discovery#smoke-tests)
+
+[**Ollama node-local inference**](https://docs.openclaw.ai/providers/ollama/node-local-inference)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Node-local inference](https://docs.openclaw.ai/providers/ollama/node-local-inference#node-local-inference)
+- [](https://docs.openclaw.ai/providers/ollama)[Start Ollama on the node](https://docs.openclaw.ai/providers/ollama/node-local-inference#start-ollama-on-the-node)
+- [](https://docs.openclaw.ai/providers/ollama)[Connect the node host](https://docs.openclaw.ai/providers/ollama/node-local-inference#connect-the-node-host)
+- [](https://docs.openclaw.ai/providers/ollama)[Use it from an agent](https://docs.openclaw.ai/providers/ollama/node-local-inference#use-it-from-an-agent)
+
+[**Ollama vision and image description**](https://docs.openclaw.ai/providers/ollama/vision)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Vision and image description](https://docs.openclaw.ai/providers/ollama/vision#vision-and-image-description)
+
+[**Ollama configuration**](https://docs.openclaw.ai/providers/ollama/configuration)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Configuration](https://docs.openclaw.ai/providers/ollama/configuration#configuration)
+- [](https://docs.openclaw.ai/providers/ollama)[Basic (implicit discovery)](https://docs.openclaw.ai/providers/ollama/configuration#basic-implicit-discovery)
+- [](https://docs.openclaw.ai/providers/ollama)[Explicit (manual models)](https://docs.openclaw.ai/providers/ollama/configuration#explicit-manual-models)
+- [](https://docs.openclaw.ai/providers/ollama)[Custom base URL](https://docs.openclaw.ai/providers/ollama/configuration#custom-base-url)
+
+[**Ollama config recipes**](https://docs.openclaw.ai/providers/ollama/recipes)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Common recipes](https://docs.openclaw.ai/providers/ollama/recipes#common-recipes)
+- [](https://docs.openclaw.ai/providers/ollama)[Model selection](https://docs.openclaw.ai/providers/ollama/recipes#model-selection)
+- [](https://docs.openclaw.ai/providers/ollama)[Quick verification](https://docs.openclaw.ai/providers/ollama/recipes#quick-verification)
+- [](https://docs.openclaw.ai/providers/ollama)[Local model with auto-discovery](https://docs.openclaw.ai/providers/ollama/recipes#local-model-with-auto-discovery)
+- [](https://docs.openclaw.ai/providers/ollama)[LAN Ollama host with manual models](https://docs.openclaw.ai/providers/ollama/recipes#lan-ollama-host-with-manual-models)
+- [](https://docs.openclaw.ai/providers/ollama)[Ollama Cloud only](https://docs.openclaw.ai/providers/ollama/recipes#ollama-cloud-only)
+- [](https://docs.openclaw.ai/providers/ollama)[Cloud plus local through a signed-in daemon](https://docs.openclaw.ai/providers/ollama/recipes#cloud-plus-local-through-a-signed-in-daemon)
+- [](https://docs.openclaw.ai/providers/ollama)[Multiple Ollama hosts](https://docs.openclaw.ai/providers/ollama/recipes#multiple-ollama-hosts)
+- [](https://docs.openclaw.ai/providers/ollama)[Small local model profile](https://docs.openclaw.ai/providers/ollama/recipes#small-local-model-profile)
+
+[**Ollama Web Search**](https://docs.openclaw.ai/providers/ollama/web-search)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Ollama Web Search](https://docs.openclaw.ai/providers/ollama/web-search#ollama-web-search)
+
+[**Ollama advanced configuration**](https://docs.openclaw.ai/providers/ollama/advanced)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Advanced configuration](https://docs.openclaw.ai/providers/ollama/advanced#advanced-configuration)
+- [](https://docs.openclaw.ai/providers/ollama)[Legacy OpenAI-compatible mode](https://docs.openclaw.ai/providers/ollama/advanced#legacy-openai-compatible-mode)
+- [](https://docs.openclaw.ai/providers/ollama)[Context windows](https://docs.openclaw.ai/providers/ollama/advanced#context-windows)
+- [](https://docs.openclaw.ai/providers/ollama)[Thinking control](https://docs.openclaw.ai/providers/ollama/advanced#thinking-control)
+- [](https://docs.openclaw.ai/providers/ollama)[Reasoning models](https://docs.openclaw.ai/providers/ollama/advanced#reasoning-models)
+- [](https://docs.openclaw.ai/providers/ollama)[Model costs](https://docs.openclaw.ai/providers/ollama/advanced#model-costs)
+- [](https://docs.openclaw.ai/providers/ollama)[Memory embeddings](https://docs.openclaw.ai/providers/ollama/advanced#memory-embeddings)
+- [](https://docs.openclaw.ai/providers/ollama)[Streaming configuration](https://docs.openclaw.ai/providers/ollama/advanced#streaming-configuration)
+
+[**Ollama troubleshooting**](https://docs.openclaw.ai/providers/ollama/troubleshooting)
+
+- [](https://docs.openclaw.ai/providers/ollama)[Troubleshooting](https://docs.openclaw.ai/providers/ollama/troubleshooting#troubleshooting)
+- [](https://docs.openclaw.ai/providers/ollama)[WSL2 crash loop (repeated reboots)](https://docs.openclaw.ai/providers/ollama/troubleshooting#wsl2-crash-loop-repeated-reboots)
+- [](https://docs.openclaw.ai/providers/ollama)[Ollama not detected](https://docs.openclaw.ai/providers/ollama/troubleshooting#ollama-not-detected)
+- [](https://docs.openclaw.ai/providers/ollama)[No models available](https://docs.openclaw.ai/providers/ollama/troubleshooting#no-models-available)
+- [](https://docs.openclaw.ai/providers/ollama)[Connection refused](https://docs.openclaw.ai/providers/ollama/troubleshooting#connection-refused)
+- [](https://docs.openclaw.ai/providers/ollama)[Remote host works with curl but not OpenClaw](https://docs.openclaw.ai/providers/ollama/troubleshooting#remote-host-works-with-curl-but-not-openclaw)
+- [](https://docs.openclaw.ai/providers/ollama)[Model outputs tool calls as text](https://docs.openclaw.ai/providers/ollama/troubleshooting#model-outputs-tool-calls-as-text)
+- [](https://docs.openclaw.ai/providers/ollama)[Kimi or GLM returns garbled symbols](https://docs.openclaw.ai/providers/ollama/troubleshooting#kimi-or-glm-returns-garbled-symbols)
+- [](https://docs.openclaw.ai/providers/ollama)[Cold local model times out](https://docs.openclaw.ai/providers/ollama/troubleshooting#cold-local-model-times-out)
+- [](https://docs.openclaw.ai/providers/ollama)[Large-context model is too slow or runs out of memory](https://docs.openclaw.ai/providers/ollama/troubleshooting#large-context-model-is-too-slow-or-runs-out-of-memory)
+
+[](https://docs.openclaw.ai/providers/ollama-cloud)[](https://docs.openclaw.ai/concepts/model-providers)[](https://docs.openclaw.ai/concepts/models)
+
+[**Ollama Web Search**  
+\
+Full setup and behavior details for Ollama-powered web search.](https://docs.openclaw.ai/tools/ollama-search)
+
+[**LM Studio**  
+\
+Another local runner for GGUF or MLX models, as a GUI app or a headless server.](https://docs.openclaw.ai/providers/lmstudio)
+
+[](https://docs.openclaw.ai/plugins/memory-lancedb)[](https://docs.openclaw.ai/gateway/configuration)
+
+
+===== https://modelcontextprotocol.io/specification/latest =====
+PROMPT: Extract the specification version and date, the list of all sections/pages in the navigation, and the concrete requirements for tools, authorization, security best practices, transports, and lifecycle. Note what changed from 2025-11-25.
+**标题**: Specification - Model Context Protocol
+
+[Skip to main content](https://modelcontextprotocol.io/specification/2026-07-28#content-area)
+
+# Specification
+
+[Model Context Protocol](https://modelcontextprotocol.io) (MCP) is an open protocol that enables seamless integration between LLM applications and external data sources and tools. Whether you’re building an AI-powered IDE, enhancing a chat interface, or creating custom AI workflows, MCP provides a standardized way to connect LLMs with the context they need. This specification defines the authoritative protocol requirements, based on the TypeScript schema in [schema.ts](https://github.com/modelcontextprotocol/specification/blob/main/schema/2026-07-28/schema.ts). For implementation guides and examples, visit [modelcontextprotocol.io](https://modelcontextprotocol.io). The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “NOT RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in [BCP 14](https://datatracker.ietf.org/doc/html/bcp14) [[RFC2119](https://datatracker.ietf.org/doc/html/rfc2119)] [[RFC8174](https://datatracker.ietf.org/doc/html/rfc8174)] when, and only when, they appear in all capitals, as shown here.
+
+## [​](https://modelcontextprotocol.io/specification/2026-07-28#overview) Overview
+
+MCP provides a standardized way for applications to:
+
+- Share contextual information with language models
+- Expose tools and capabilities to AI systems
+- Build composable integrations and workflows
+
+The protocol uses [JSON-RPC](https://www.jsonrpc.org/) 2.0 messages to establish communication between:
+
+- **Hosts**: LLM applications that initiate connections
+- **Clients**: Connectors within the host application
+- **Servers**: Services that provide context and capabilities
+
+MCP takes some inspiration from the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), which standardizes how to add support for programming languages across a whole ecosystem of development tools. In a similar way, MCP standardizes how to integrate additional context and tools into the ecosystem of AI applications.
+
+## [​](https://modelcontextprotocol.io/specification/2026-07-28#key-details) Key Details
+
+### [​](https://modelcontextprotocol.io/specification/2026-07-28#base-protocol) Base Protocol
+
+- [JSON-RPC](https://www.jsonrpc.org/) message format
+- Stateless, self-contained requests
+- Per-request capability negotiation
+
+### [​](https://modelcontextprotocol.io/specification/2026-07-28#features) Features
+
+Servers offer any of the following features to clients:
+
+- **Resources**: Context and data, for the user or the AI model to use
+- **Prompts**: Templated messages and workflows for users
+- **Tools**: Functions for the AI model to execute
+
+Clients may offer the following features to servers:
+
+- **Elicitation**: Server-initiated requests for additional information from users
+
+### [​](https://modelcontextprotocol.io/specification/2026-07-28#additional-utilities) Additional Utilities
+
+- Configuration
+- Progress tracking
+- Cancellation
+- Error reporting
+
+### [​](https://modelcontextprotocol.io/specification/2026-07-28#extensions) Extensions
+
+Beyond the core protocol, MCP defines optional [extensions](https://modelcontextprotocol.io/extensions/overview) that add modular, specialized, or experimental functionality. Extensions are always opt-in and require explicit support from both client and server, negotiated during initialization. Notable extensions include:
+
+- [**Tasks**](https://modelcontextprotocol.io/extensions/tasks/overview): Asynchronous execution of long-running operations, with polling, mid-flight input, and durable handles
+- [**Skills over MCP**](https://modelcontextprotocol.io/community/working-groups/skills-over-mcp): Rich, structured instructions for agent workflows, discovered and consumed through MCP
+- [**MCP Apps**](https://modelcontextprotocol.io/extensions/apps/overview): Interactive UI elements (charts, forms, video players) rendered inline within conversations
+
+## [​](https://modelcontextprotocol.io/specification/2026-07-28#security-and-trust-&-safety) Security and Trust & Safety
+
+The Model Context Protocol enables powerful capabilities through arbitrary data access and code execution paths. With this power comes important security and trust considerations that all implementors must carefully address.
+
+### [​](https://modelcontextprotocol.io/specification/2026-07-28#key-principles) Key Principles
+
+1. **User Consent and Control**
+   
+   - Users must explicitly consent to and understand all data access and operations
+   - Users must retain control over what data is shared and what actions are taken
+   - Implementors should provide clear UIs for reviewing and authorizing activities
+2. **Data Privacy**
+   
+   - Hosts must obtain explicit user consent before exposing user data to servers
+   - Hosts must not transmit resource data elsewhere without user consent
+   - User data should be protected with appropriate access controls
+3. **Tool Safety**
+   
+   - Tools represent arbitrary code execution and must be treated with appropriate caution.
+     
+     - In particular, descriptions of tool behavior such as annotations should be considered untrusted, unless obtained from a trusted server.
+   - Hosts must obtain explicit user consent before invoking any tool
+   - Users should understand what each tool does before authorizing its use
+
+### [​](https://modelcontextprotocol.io/specification/2026-07-28#implementation-guidelines) Implementation Guidelines
+
+While MCP itself cannot enforce these security principles at the protocol level, implementors **SHOULD**:
+
+1. Build robust consent and authorization flows into their applications
+2. Provide clear documentation of security implications
+3. Implement appropriate access controls and data protections
+4. Follow security best practices in their integrations
+5. Consider privacy implications in their feature designs
+
+## [​](https://modelcontextprotocol.io/specification/2026-07-28#learn-more) Learn More
+
+Explore the detailed specification for each protocol component:
+
+
+===== https://raw.githubusercontent.com/xai-org/grok-build/main/README.md =====
+PROMPT: Extract verbatim: installation instructions, build from source requirements (Rust version), all CLI commands and flags, config.toml examples, authentication, MCP/tool support, skills, license, and every stated limitation or warning. Also list the repository file/directory structure if described.
+````
+<div align="center">
+
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://media.x.ai/v1/website/spacexai-symbol-white-transparent-0c31957f.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://media.x.ai/v1/website/spacexai-symbol-black-transparent-6435cf42.png">
+    <img alt="SpaceXAI logo" src="https://media.x.ai/v1/website/spacexai-symbol-black-transparent-6435cf42.png" width="96">
+  </picture>
+  <br>
+  Grok Build (<code>grok</code>)
+</h1>
+
+**Grok Build** is SpaceXAI's terminal-based AI coding agent. It runs as a
+full-screen TUI that understands your codebase, edits files, executes shell
+commands, searches the web, and manages long-running tasks — interactively,
+headlessly for scripting/CI, or embedded in editors via the Agent Client
+Protocol (ACP).
+
+[Installing the released binary](#installing-the-released-binary) ·
+[Building from source](#building-from-source) ·
+[Documentation](#documentation) ·
+[Repository layout](#repository-layout) ·
+[Development](#development) ·
+[Contributing](#contributing) ·
+[License](#license)
+
+![Grok Build TUI](https://media.x.ai/v1/website/universe-tui-screenshot-6f7a0837.png)
+
+**Learn more about Grok Build at [x.ai/cli](https://x.ai/cli)**
+
+This repository contains the Rust source for the `grok` CLI/TUI and its agent
+runtime. It is synced periodically from the SpaceXAI monorepo.
+
+A small `SOURCE_REV` file at the root records the full monorepo commit SHA
+for the version of the code present in this tree.
+
+</div>
+
+---
+
+## Installing the released binary
+
+Prebuilt binaries are published for macOS, Linux, and Windows:
+
+```sh
+curl -fsSL https://x.ai/cli/install.sh | bash   # macOS / Linux / Git Bash
+irm https://x.ai/cli/install.ps1 | iex          # Windows PowerShell
+grok --version
+```
+
+See the [changelog](https://x.ai/build/changelog) for the latest fixes,
+features, and improvements in each release.
+
+## Building from source
+
+Requirements:
+
+- **Rust** — the toolchain is pinned by [`rust-toolchain.toml`](rust-toolchain.toml);
+  `rustup` installs it automatically on first build.
+- **[DotSlash](https://dotslash-cli.com)** — required so hermetic tools under
+  [`bin/`](bin/) (notably [`bin/protoc`](bin/protoc)) can download and run.
+  Install it and ensure `dotslash` is on your `PATH` **before** building:
+
+  ```sh
+  cargo install dotslash
+  # or: prebuilt packages — https://dotslash-cli.com/docs/installation/
+  /usr/bin/env dotslash --help   # sanity check
+  ```
+
+- **protoc** — proto codegen resolves [`bin/protoc`](bin/protoc) via DotSlash,
+  or falls back to a `protoc` on `PATH` / `$PROTOC`.
+- macOS and Linux are supported build hosts; Windows builds are best-effort
+  and not currently tested from this tree.
+
+```sh
+cargo run -p xai-grok-pager-bin              # build + launch the TUI
+cargo build -p xai-grok-pager-bin --release  # release binary: target/release/xai-grok-pager
+cargo check -p xai-grok-pager-bin            # fast validation
+```
+
+The binary artifact is named `xai-grok-pager`; official installs ship it as
+`grok`. On first launch it opens your browser to authenticate — see the
+[authentication guide](crates/codegen/xai-grok-pager/docs/user-guide/02-authentication.md).
+
+## Documentation
+
+Full online documentation is available at
+[docs.x.ai/build/overview](https://docs.x.ai/build/overview).
+
+The user guide ships with the pager crate:
+[`crates/codegen/xai-grok-pager/docs/user-guide/`](crates/codegen/xai-grok-pager/docs/user-guide/)
+— getting started, keyboard shortcuts, slash commands, configuration, theming,
+MCP servers, skills, plugins, hooks, headless mode, sandboxing, and more.
+
+## Repository layout
+
+| Path | Contents |
+|------|----------|
+| `crates/codegen/xai-grok-pager-bin` | Composition-root package; builds the `xai-grok-pager` binary |
+| `crates/codegen/xai-grok-pager` | The TUI: scrollback, prompt, modals, rendering |
+| `crates/codegen/xai-grok-shell` | Agent runtime + leader/stdio/headless entry points |
+| `crates/codegen/xai-grok-tools` | Tool implementations (terminal, file edit, search, ...) |
+| `crates/codegen/xai-grok-workspace` | Host filesystem, VCS, execution, checkpoints |
+| `crates/codegen/...` | The rest of the CLI crate closure (config, MCP, markdown, sandbox, ...) |
+| `crates/common/`, `crates/build/`, `prod/mc/` | Small shared leaf crates pulled in by the closure |
+| `third_party/` | Vendored upstream source (Mermaid diagram stack) — see below |
+
+> [!IMPORTANT]
+> The root `Cargo.toml` (workspace members, dependency versions, lints,
+> profiles) is **generated** — treat it as read-only. Prefer editing per-crate
+> `Cargo.toml` files.
+
+## Development
+
+```sh
+cargo check -p <crate>        # always target specific crates; full-workspace builds are slow
+cargo test -p xai-grok-config # per-crate tests
+cargo clippy -p <crate>       # lint config: clippy.toml at the repo root
+cargo fmt --all               # rustfmt.toml at the repo root
+```
+
+## Contributing
+
+> [!NOTE]
+> External contributions are not accepted. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## License
+
+First-party code in this repository is licensed under the **Apache License,
+Version 2.0** — see [`LICENSE`](LICENSE).
+
+Third-party and vendored code remains under its original licenses. See:
+
+- [`THIRD-PARTY-NOTICES`](THIRD-PARTY-NOTICES) — crates.io / git dependencies,
+  bundled UI themes, and **in-tree source ports** (including openai/codex and
+  sst/opencode tool implementations)
+- [`crates/codegen/xai-grok-tools/THIRD_PARTY_NOTICES.md`](crates/codegen/xai-grok-tools/THIRD_PARTY_NOTICES.md)
+  — crate-local notice for the codex and opencode ports (license texts +
+  Apache §4(b) change notice)
+- [`third_party/NOTICE`](third_party/NOTICE) — vendored Mermaid-stack index
+````
+
+
+===== https://docs.openclaw.ai/providers/ollama/recipes =====
+PROMPT: Quote verbatim every configuration recipe and JSON/TOML config block, including local model with auto-discovery, LAN host with manual models, small local model profile, model selection, and quick verification commands. Include exact model IDs and key names.
+**标题**: Ollama config recipes - OpenClaw
+
+On this pageCommon recipes
+
+Providers
+
+# Ollama config recipes
+
+## Common recipes
+
+Replace model IDs with exact names from `ollama list` or `openclaw models list --provider ollama`.
+
+Local model with auto-discovery
+
+Ollama on the same machine as the Gateway, discovered automatically:
+
+bashCopy code
+
+```bash
+ollama serveollama pull gemma4export OLLAMA_API_KEY="ollama-local"openclaw models list --provider ollamaopenclaw models set ollama/gemma4
+```
+
+Leave `models.providers.ollama` unset to use the default local endpoint, or configure a self-hosted endpoint; both keep discovery eligible.
+
+LAN Ollama host with manual models
+
+json5Copy code
+
+```json5
+{  models: {    providers: {      ollama: {        baseUrl: "http://gpu-box.local:11434",        apiKey: "ollama-local",        api: "ollama",        timeoutSeconds: 300,        maxTokens: 8192,        models: [          {            id: "qwen3.5:9b",            name: "qwen3.5:9b",            reasoning: true,            input: ["text"],            contextTokens: 32768,            params: {              num_ctx: 32768,              thinking: false,              keep_alive: "15m",            },          },        ],      },    },  },  agents: {    defaults: {      model: { primary: "ollama/qwen3.5:9b" },    },  },}
+```
+
+`contextTokens` caps OpenClaw's active-input budget; `params.num_ctx` sets Ollama's request context. Keep them aligned when hardware cannot run the model's full advertised context.
+
+Ollama Cloud only
+
+No local daemon, hosted models directly through the dedicated `ollama-cloud` provider:
+
+bashCopy code
+
+```bash
+export OLLAMA_API_KEY="your-ollama-api-key"
+```
+
+json5Copy code
+
+```json5
+{  agents: {    defaults: {      model: { primary: "ollama-cloud/kimi-k3" },    },  },}
+```
+
+Or run `openclaw onboard --auth-choice ollama-cloud` to save the key as an `ollama-cloud` credential. See [Ollama Cloud](https://docs.openclaw.ai/providers/ollama-cloud).
+
+Cloud plus local through a signed-in daemon
+
+bashCopy code
+
+```bash
+ollama signinollama pull gemma4
+```
+
+json5Copy code
+
+```json5
+{  models: {    providers: {      ollama: {        baseUrl: "http://127.0.0.1:11434",        apiKey: "ollama-local",        api: "ollama",        timeoutSeconds: 300,        models: [          { id: "gemma4", name: "gemma4", input: ["text"] },          { id: "kimi-k2.6:cloud", name: "kimi-k2.6:cloud", input: ["text", "image"] },        ],      },    },  },  agents: {    defaults: {      model: {        primary: "ollama/gemma4",        fallbacks: ["ollama/kimi-k2.6:cloud"],      },    },  },}
+```
+
+Multiple Ollama hosts
+
+Custom provider IDs when running more than one Ollama server; each gets its own host, models, auth, and timeout.
+
+json5Copy code
+
+```json5
+{  models: {    providers: {      "ollama-fast": {        baseUrl: "http://mini.local:11434",        apiKey: "ollama-local",        api: "ollama",        models: [          { id: "gemma4", name: "gemma4", input: ["text"], contextTokens: 32768 },        ],      },      "ollama-large": {        baseUrl: "http://gpu-box.local:11434",        apiKey: "ollama-local",        api: "ollama",        timeoutSeconds: 420,        maxTokens: 16384,        models: [          { id: "qwen3.5:27b", name: "qwen3.5:27b", input: ["text"], contextTokens: 131072 },        ],      },    },  },  agents: {    defaults: {      model: {        primary: "ollama-fast/gemma4",        fallbacks: ["ollama-large/qwen3.5:27b"],      },    },  },}
+```
+
+OpenClaw strips the active provider prefix (falling back to a bare `ollama/` prefix) before calling Ollama, so `ollama-large/qwen3.5:27b` reaches Ollama as `qwen3.5:27b`.
+
+Small local model profile
+
+Local Ollama models automatically use structured [Tool Search](https://docs.openclaw.ai/tools/tool-search) when `tools.toolSearch` is unset. This keeps optional capabilities available while loading their schemas only when needed. Setup does not enable lean mode. App, interactive CLI, and non-interactive setup use a 32,768-token runtime context, or the model's native window if smaller. The advertised native window is retained separately; known cloud routes keep their hosted context. Large file reads use OpenClaw's context-based paging. The native adapter preserves those text pages and their continuation instructions; structured fallback data is bounded separately. Bound any explicit context override to what the host can support:
+
+json5Copy code
+
+```json5
+{  agents: {    entries: {      local: {        model: { primary: "ollama/gemma4" },      },    },  },  models: {    providers: {      ollama: {        baseUrl: "http://127.0.0.1:11434",        apiKey: "ollama-local",        api: "ollama",        models: [          {            id: "gemma4",            name: "gemma4",            input: ["text"],            contextTokens: 32768,            params: { num_ctx: 32768 },          },        ],      },    },  },}
+```
+
+Explicit `tools.toolSearch` settings take precedence, including `false`. Tool Search does not change Ollama's context or thinking mode. Ollama thinking defaults to off; an explicit thinking setting can change that independently. If you previously enabled `localModelLean`, set it to `false` to restore optional tools while retaining automatic Tool Search.
+
+Use `compat.supportsTools: false` only when the model or server reliably fails on tool schemas; it disables tool use entirely. For a deliberately narrower agent, prefer `tools.profile` or a per-agent tool policy.
+
+### Model selection
+
+json5Copy code
+
+```json5
+{  agents: {    defaults: {      model: {        primary: "ollama/gpt-oss:20b",        fallbacks: ["ollama/llama3.3", "ollama/qwen2.5-coder:32b"],      },    },  },}
+```
+
+Custom provider ids work the same way: for a ref using the active provider prefix, such as `ollama-spark/qwen3:32b`, OpenClaw strips that prefix before calling Ollama, sending `qwen3:32b`.
+
+For slow local models, prefer provider-scoped tuning before raising the whole agent runtime timeout:
+
+json5Copy code
+
+```json5
+{  models: {    providers: {      ollama: {        timeoutSeconds: 300,        models: [          {            id: "gemma4:26b",            name: "gemma4:26b",            params: { keep_alive: "15m" },          },        ],      },    },  },}
+```
+
+`timeoutSeconds` covers the model HTTP request: connection setup, headers, body streaming, and the total guarded-fetch abort. `params.keep_alive` is forwarded as top-level `keep_alive` on native `/api/chat` requests; set it per model when first-turn load time is the bottleneck.
+
+bashCopy code
+
+```bash
+# Ollama daemon visible to this machinecurl http://127.0.0.1:11434/api/tags # OpenClaw catalog and selected modelopenclaw models list --provider ollamaopenclaw models status # Direct model smokeopenclaw infer model run \  --model ollama/gemma4 \  --prompt "Reply with exactly: ok"
+```
+
+For remote hosts, replace `127.0.0.1` with the `baseUrl` host. If `curl` works but OpenClaw does not, check whether the Gateway runs on a different machine, container, or service account.
+
+
+===== https://docs.openclaw.ai/providers/ollama/troubleshooting =====
+PROMPT: For EACH listed failure mode, quote the symptom and the exact recommended fix/commands. Cover: WSL2 crash loop, Ollama not detected, no models available, connection refused, remote host works with curl but not OpenClaw, model outputs tool calls as text, Kimi/GLM garbled symbols, cold model timeout, large-context OOM.
+**标题**: Ollama troubleshooting - OpenClaw
+
+On this pageTroubleshooting
+
+# Ollama troubleshooting
+
+## Troubleshooting
+
+WSL2 crash loop (repeated reboots)
+
+On WSL2 with NVIDIA/CUDA, the official Ollama Linux installer creates an `ollama.service` systemd unit with `Restart=always`. If that service autostarts and loads a GPU-backed model during WSL2 boot, Ollama can pin host memory while loading; Hyper-V memory reclaim cannot always reclaim those pages, so Windows can terminate the WSL2 VM, systemd restarts Ollama, and the loop repeats.
+
+Evidence: repeated WSL2 reboots/terminations, high CPU in `app.slice` or `ollama.service` right after WSL2 startup, and SIGTERM from systemd rather than the Linux OOM killer.
+
+OpenClaw logs a startup warning when it detects WSL2, `ollama.service` enabled with `Restart=always`, and visible CUDA markers.
+
+Mitigation:
+
+bashCopy code
+
+```bash
+sudo systemctl disable ollama
+```
+
+On the Windows side, add this to `%USERPROFILE%\.wslconfig`, then run `wsl --shutdown`:
+
+iniCopy code
+
+```ini
+[experimental]autoMemoryReclaim=disabled
+```
+
+Or shorten keep-alive / start Ollama manually only when needed:
+
+bashCopy code
+
+```bash
+export OLLAMA_KEEP_ALIVE=5mollama serve
+```
+
+See [ollama/ollama#11317](https://github.com/ollama/ollama/issues/11317).
+
+Ollama not detected
+
+Confirm Ollama is running and is in the agent's model scope. For ambient localhost discovery, set `OLLAMA_API_KEY` (or an auth profile). An explicit self-hosted endpoint is discovered whether or not it lists models:
+
+bashCopy code
+
+```bash
+ollama servecurl http://localhost:11434/api/tags
+```
+
+No models available
+
+Pull the model locally, or define it explicitly in `models.providers.ollama`:
+
+bashCopy code
+
+```bash
+ollama list  # See what's installedollama pull gemma4ollama pull gpt-oss:20bollama pull llama3.3     # Or another model
+```
+
+Connection refused
+
+bashCopy code
+
+```bash
+# Check if Ollama is runningps aux | grep ollama # Or restart Ollamaollama serve
+```
+
+Remote host works with curl but not OpenClaw
+
+Verify from the same machine and runtime that runs the Gateway:
+
+bashCopy code
+
+```bash
+openclaw gateway status --deepcurl http://ollama-host:11434/api/tags
+```
+
+Common causes:
+
+- `baseUrl` points at `localhost`, but the Gateway runs in Docker or on another host.
+- The URL uses `/v1`, selecting OpenAI-compatible behavior instead of native Ollama.
+- The remote host needs firewall or LAN binding changes.
+- The model is on your laptop's daemon but not the remote one.
+
+Model outputs tool calls as text
+
+Usually the provider is in OpenAI-compatible mode, or the model cannot handle tool schemas. Prefer native mode:
+
+json5Copy code
+
+```json5
+{  models: {    providers: {      ollama: {        baseUrl: "http://ollama-host:11434",        api: "ollama",      },    },  },}
+```
+
+If a small local model still fails on tool schemas, set `compat.supportsTools: false` on that model entry and retest.
+
+When a reply consists of a structured tool-call attempt naming an available tool, including wrapped XML, ReAct `Action`/`Action Input`, and legacy `[TOOL_CALL]` blocks, OpenClaw asks the model once to call the tool natively when recovery is safe. Earlier side effects can prevent that retry. A repeated text call fails visibly instead of reporting success. Text calls are never executed by this guard; examples in substantive answers remain text. The original reply and corrective continuation remain in session history.
+
+If tool calls still arrive as text, try [llmman](https://docs.openclaw.ai/providers/llmman#advanced-configuration) with its explicit native Ollama configuration and a model that supports tool calling.
+
+Repeated tool errors stop the turn
+
+With `tools.toolSearch` unset, embedded runs using native local Ollama expose policy-approved `web_search`, `web_fetch`, `memory_search`, and `memory_get` directly. Other optional tools remain deferred. Explicit Tool Search settings keep their configured behavior. Direct exposure does not enable a denied tool, enable memory, or configure a web-search provider.
+
+After three consecutive identical failures for the same tool and arguments, OpenClaw blocks that exact action and gives the model one chance to replan. An unchanged retry ends the turn without executing the call again. Unknown tool IDs also count. This protection is always active; enabling `tools.loopDetection` is not required.
+
+Ollama 0.40's generic parser can mistake a chat-template marker for an advertised tool name. Tool Search uses the collision-free `dispatch_action` name across providers, with the same name in instructions, requests, and new session history. It no longer needs an `openclaw_tool_call` wire alias. Directly exposed names that still collide, such as `ls`, `name`, and `function`, retain transport-only aliases such as `openclaw_ls`. Execution and session history keep those tools' original names.
+
+These remaining aliases cover native Ollama and the Ollama plugin's identified OpenAI-compatible chat-completions route. Other providers are unchanged. Custom Ollama templates with different markers may need separate diagnosis.
+
+Check the named tool's inputs or service. If a failed action may have partly applied, inspect its state before choosing another action. If the model repeatedly invents tool names or cannot use exposed schemas, consider a model with native tool calling. Changed errors and successes reset the streak but do not release an already blocked action. A committed new user message starts a fresh recovery allowance. See [Tool-loop detection](https://docs.openclaw.ai/tools/loop-detection).
+
+Repetitive output stopped
+
+OpenClaw stopped a long repetition-dominated response from a model with a known total size in the 32B class or smaller. It replaced the affected unfinished block in session history with `[Repetitive output stopped]`. Earlier blocks and completed tool work remain; side effects are not retried automatically.
+
+Try a stronger model, request less output, or split the task into smaller turns. Native Ollama requests also send the resolved model output cap as `num_predict`; lower the model's `maxTokens` if generation runs too long. Discovered local models default to 8,192 output tokens. Ollama Cloud models use their documented output limits, or their context window when a separate output limit is unavailable. Authored `maxTokens` and `params.num_predict` override those defaults. Set `params: { num_predict: -1 }` on a model entry to restore Ollama's unlimited generation default; an explicit request output cap still wins. The detector starts around 16,000 characters and can stop legitimate output with sufficiently dominant repetition. It applies to the 32B class (less than 34 billion total parameters) and stays off when total model size is unknown. See [Output budgets and repetition stops](https://docs.openclaw.ai/gateway/local-models#output-budgets-and-repetition-stops).
+
+Kimi or GLM returns garbled symbols
+
+Hosted Kimi/GLM responses that are long, non-linguistic symbol runs are treated as a failed provider call rather than a successful reply, so normal retry/fallback/error handling takes over instead of persisting corrupted text into the session.
+
+If it recurs, capture the model name, the current session file, and whether the run used `Cloud + Local` or Ollama Cloud, then try a fresh session and a fallback model:
+
+bashCopy code
+
+```bash
+openclaw infer model run --model ollama/kimi-k2.6:cloud --prompt "Reply with exactly: ok" --jsonopenclaw models set ollama/gemma4
+```
+
+Cold local model times out
+
+Large local models can need a long first load. Scope the timeout to the Ollama provider and optionally keep the model loaded between turns:
+
+json5Copy code
+
+```json5
+{  models: {    providers: {      ollama: {        timeoutSeconds: 300,        models: [          {            id: "gemma4:26b",            name: "gemma4:26b",            params: { keep_alive: "15m" },          },        ],      },    },  },}
+```
+
+If the host itself is slow to accept connections, `timeoutSeconds` also extends the guarded connect timeout for this provider.
+
+Large-context model is too slow or runs out of memory
+
+Many models advertise contexts larger than your hardware can run comfortably. Native requests forward the effective `contextTokens` unless `params.num_ctx` overrides it. Cap both OpenClaw's budget and Ollama's request context for predictable first-token latency:
+
+json5Copy code
+
+```json5
+{  models: {    providers: {      ollama: {        maxTokens: 8192,        models: [          {            id: "qwen3.5:9b",            name: "qwen3.5:9b",            contextTokens: 32768,            params: { num_ctx: 32768, thinking: false },          },        ],      },    },  },}
+```
+
+Lower the model entry's `contextTokens` if OpenClaw sends too much prompt. Lower `params.num_ctx` if Ollama's runtime context is too large for the machine. Lower `maxTokens` if generation runs too long.
+
+Memory embedding rebuild fails
+
+If `openclaw memory index --force` fails against Ollama (for example with `bge-m3`), try [llmman](https://docs.openclaw.ai/providers/llmman#advanced-configuration) as the embedding server. `provider: "ollama"` only needs a new `remote.baseUrl`.
+
+Ollama still aborts or hangs on this host
+
+If `curl` to Ollama works but agent turns abort, try [llmman](https://docs.openclaw.ai/providers/llmman) as the local server.
+
+
+===== https://docs.openclaw.ai/gateway/configuration =====
+PROMPT: Extract the exact config file path and format, the full top-level config schema keys, how to edit config, hot reload behaviour, and any examples. Include the config keys for models, providers, agents, tools, sandbox, and gateway.
+**标题**: Configuration - OpenClaw
+
+On this pageMinimal config
+
+# Configuration
+
+OpenClaw reads an optional **JSON5** config from `~/.openclaw/openclaw.json`. If the file is missing, OpenClaw uses safe defaults.
+
+Config writes require the active config path to be a regular file. Snapshot reads, including `backup create`, can follow a config-file symlink. The configured state directory may be a symlink: OpenClaw resolves its directory for atomic writes while retaining the configured path, and rejects a directory alias that changes during a write. To write config outside the default state directory, point `OPENCLAW_CONFIG_PATH` directly at the real file.
+
+Common reasons to add a config:
+
+- Connect channels and control who can message the bot
+- Set models, tools, sandboxing, or automation (cron, hooks)
+- Tune sessions, media, networking, or UI
+
+See the [Configuration reference](https://docs.openclaw.ai/gateway/configuration-reference) for every available field.
+
+Configuration follows a two-bucket rule: root siblings hold infrastructure and cross-agent defaults, while `agents.defaults` holds agent-loop behavior. Entries under `agents.entries` may override either bucket where the schema supports a per-agent override.
+
+Agents and automation should use `config.schema.lookup` for exact field-level docs before editing config. Use this page for task-oriented guidance and [Configuration reference](https://docs.openclaw.ai/gateway/configuration-reference) for the broader field map and defaults.
+
+**Tip**
+
+**New to configuration?** Start with `openclaw onboard` for interactive setup, or check out the [Configuration Examples](https://docs.openclaw.ai/gateway/configuration-examples) guide for complete copy-paste configs.
+
+## Minimal config
+
+json5Copy code
+
+```json5
+// ~/.openclaw/openclaw.json{  agents: { defaults: { workspace: "~/.openclaw/workspace" } },  channels: { whatsapp: { allowFrom: ["+15555550123"] } },}
+```
+
+## Editing config
+
+### Interactive wizard
+
+bashCopy code
+
+```bash
+openclaw onboard       # full onboarding flowopenclaw configure     # config wizard
+```
+
+### CLI (one-liners)
+
+bashCopy code
+
+```bash
+openclaw config get agents.defaults.workspaceopenclaw config set agents.defaults.userTimezone "Europe/Vienna"openclaw config unset plugins.entries.brave.config.webSearch.apiKey
+```
+
+### Control UI
+
+Open [http://127.0.0.1:18789](http://127.0.0.1:18789) and use the **Config** tab. The Control UI renders a form from the live config schema, including field `title` / `description` docs metadata plus plugin and channel schemas when available, with a **Raw JSON** editor as an escape hatch. For drill-down UIs and other tooling, the gateway also exposes `config.schema.lookup` to fetch one path-scoped schema node plus immediate child summaries. Settings show common fields first. Each section keeps its advanced fields in a collapsed **Advanced (N)** group. Use **Show advanced** to expand all groups. Settings search always includes both tiers and opens the matching advanced group when needed. Per-channel settings under **Settings -> Channels** use the same split and share the **Show advanced** preference, with **Hide advanced** on the divider to collapse them again.
+
+### Direct edit
+
+Edit `~/.openclaw/openclaw.json` directly. The Gateway watches the file and applies changes automatically (see [hot reload](https://docs.openclaw.ai/gateway/configuration/hot-reload)).
+
+## Strict validation
+
+**Warning**
+
+OpenClaw only accepts configurations that fully match the schema. Unknown keys, malformed types, or invalid values cause the Gateway to **refuse to start**. Run `openclaw doctor --fix` to repair legacy keys before starting the Gateway. The only root-level exception is `$schema` (string), so editors can attach JSON Schema metadata.
+
+`openclaw config schema` prints the authoritative JSON Schema used by Control UI and validation. `config.schema.lookup` fetches a single path-scoped node plus child summaries for drill-down tooling. Field `title`/`description` docs metadata carries through nested objects, wildcard (`*`), array-item (`[]`), and `anyOf`/ `oneOf`/`allOf` branches. Runtime plugin and channel schemas merge in when the manifest registry is loaded.
+
+Use `config.get` to read a redacted config snapshot without building the form schema. Request `config.schema` or `config.schema.lookup` when you need field metadata. The Gateway shares these results across clients and refreshes them when the active config or plugin generation changes.
+
+Every config leaf has a common or advanced presentation tier in `uiHints`. `advanced: false` marks common settings and `advanced: true` marks advanced settings. A leaf inherits the nearest ancestor tier when it has no direct hint. Paths with no declared ancestor default to advanced. This affects presentation only, not validation, defaults, reload behavior, or whether the key can be set.
+
+Startup migration uses the same fixed, prompt-free transforms as `openclaw doctor --fix` and writes only when the entire migrated config validates, including plugins. The previous config stays in the `.bak` ring. Configs using `$include`, Nix-managed configs, and configs written by a newer OpenClaw version are not automatically migrated. See [Legacy config key migrations](https://docs.openclaw.ai/gateway/doctor#detailed-behavior-and-rationale) for the conditions and fallback.
+
+When validation still fails:
+
+- `openclaw gateway run` reports the config issues and exits with code `78`, with SQLite or PostgreSQL state
+- Only diagnostic commands work (`openclaw doctor`, `openclaw logs`, `openclaw health`, `openclaw status`)
+- Run `openclaw doctor` to see exact issues
+- Run `openclaw doctor --fix` (`--repair` is the same flag, and `--yes` skips prompts) to apply repairs
+
+The Gateway keeps a trusted last-known-good copy after each successful startup, but startup and hot reload do not restore it automatically - only `openclaw doctor --fix` does. If `openclaw.json` remains invalid after eligible startup migrations (including plugin-local validation), Gateway startup fails. An invalid hot reload is skipped and the current runtime keeps the last accepted config. When a write is blocked as an accidental clobber, OpenClaw attempts to save the rejected payload as `<path>.rejected.<timestamp>` for inspection. The warning reports whether that save succeeded. If it failed, the active config still stays unchanged. The Gateway blocks writes that look like accidental clobbers - dropping the effective `gateway.mode` or shrinking the file by more than half - unless the write explicitly allows destructive changes. Mode checks resolve `$include` and environment references first. Missing `meta` is recorded as a write anomaly. Promotion to last-known-good is skipped when a candidate contains a redacted secret placeholder such as `***` or `[redacted]`. Suspicious external reductions and stub-shaped snapshots also leave the trusted recovery copy unchanged during startup and hot reload. An ordinary accepted edit to an already-truncated file does not approve that earlier loss for replacing the backup, so Doctor can still restore the intact configuration. The health owner carries that anomaly across automatic metadata stamping and later reads; stamping a missing `meta` section does not restore the lost settings.
+
+## Configuration pages
+
+This page is an index. The longer reference sections live on four pages. Open the page that matches what you need.
+
+Page Read it when [Common tasks](https://docs.openclaw.ai/gateway/configuration/common-tasks) You want a copy-paste recipe for a channel, model, access rule, session, or automation. [Config hot reload](https://docs.openclaw.ai/gateway/configuration/hot-reload) An edit did not take effect, or you need to know what forces a Gateway restart. [Config RPC](https://docs.openclaw.ai/gateway/configuration/config-rpc) Tooling writes config over the gateway API instead of editing the file. [Environment variables](https://docs.openclaw.ai/gateway/configuration/environment-variables) You are deciding where an API key lives, or using `${VAR}` substitution or secret refs.
+
+## Where each section moved
+
+Every anchor this page used to publish is kept here, so an existing link such as `/gateway/configuration#config-hot-reload` still resolves. Each entry points at the page that now holds the content.
+
+- [](https://docs.openclaw.ai/gateway/configuration)[Common tasks](https://docs.openclaw.ai/gateway/configuration/common-tasks#common-tasks)
+- [](https://docs.openclaw.ai/gateway/configuration)[Set up a channel (WhatsApp, Telegram, Discord, etc.)](https://docs.openclaw.ai/gateway/configuration/common-tasks#set-up-a-channel-whatsapp-telegram-discord-etc)
+- [](https://docs.openclaw.ai/gateway/configuration)[Choose and configure models](https://docs.openclaw.ai/gateway/configuration/common-tasks#choose-and-configure-models)
+- [](https://docs.openclaw.ai/gateway/configuration)[Control who can message the bot](https://docs.openclaw.ai/gateway/configuration/common-tasks#control-who-can-message-the-bot)
+- [](https://docs.openclaw.ai/gateway/configuration)[Set up group chat mention gating](https://docs.openclaw.ai/gateway/configuration/common-tasks#set-up-group-chat-mention-gating)
+- [](https://docs.openclaw.ai/gateway/configuration)[Restrict skills per agent](https://docs.openclaw.ai/gateway/configuration/common-tasks#restrict-skills-per-agent)
+- [](https://docs.openclaw.ai/gateway/configuration)[Configure per-channel health monitoring](https://docs.openclaw.ai/gateway/configuration/common-tasks#configure-per-channel-health-monitoring)
+- [](https://docs.openclaw.ai/gateway/configuration)[Configure sessions and resets](https://docs.openclaw.ai/gateway/configuration/common-tasks#configure-sessions-and-resets)
+- [](https://docs.openclaw.ai/gateway/configuration)[Enable sandboxing](https://docs.openclaw.ai/gateway/configuration/common-tasks#enable-sandboxing)
+- [](https://docs.openclaw.ai/gateway/configuration)[Enable relay-backed push for official iOS builds](https://docs.openclaw.ai/gateway/configuration/common-tasks#enable-relay-backed-push-for-official-ios-builds)
+- [](https://docs.openclaw.ai/gateway/configuration)[Set up periodic check-ins](https://docs.openclaw.ai/gateway/configuration/common-tasks#set-up-heartbeat-periodic-check-ins)
+- [](https://docs.openclaw.ai/gateway/configuration)[Configure cron jobs](https://docs.openclaw.ai/gateway/configuration/common-tasks#configure-cron-jobs)
+- [](https://docs.openclaw.ai/gateway/configuration)[Set up webhooks (hooks)](https://docs.openclaw.ai/gateway/configuration/common-tasks#set-up-webhooks-hooks)
+- [](https://docs.openclaw.ai/gateway/configuration)[Configure multi-agent routing](https://docs.openclaw.ai/gateway/configuration/common-tasks#configure-multi-agent-routing)
+- [](https://docs.openclaw.ai/gateway/configuration)[Split config into multiple files ($include)](https://docs.openclaw.ai/gateway/configuration/common-tasks#split-config-into-multiple-files-include)
+- [](https://docs.openclaw.ai/gateway/configuration)[Config hot reload](https://docs.openclaw.ai/gateway/configuration/hot-reload#config-hot-reload)
+- [](https://docs.openclaw.ai/gateway/configuration)[Reload modes](https://docs.openclaw.ai/gateway/configuration/hot-reload#reload-modes)
+- [](https://docs.openclaw.ai/gateway/configuration)[What hot-applies vs what needs a restart](https://docs.openclaw.ai/gateway/configuration/hot-reload#what-hot-applies-vs-what-needs-a-restart)
+- [](https://docs.openclaw.ai/gateway/configuration)[Reload planning](https://docs.openclaw.ai/gateway/configuration/hot-reload#reload-planning)
+- [](https://docs.openclaw.ai/gateway/configuration)[](https://docs.openclaw.ai/gateway/configuration)[Config RPC (programmatic updates)](https://docs.openclaw.ai/gateway/configuration/config-rpc#config-rpc-programmatic-updates)
+- [](https://docs.openclaw.ai/gateway/configuration)[Environment variables](https://docs.openclaw.ai/gateway/configuration/environment-variables#environment-variables)
+- [](https://docs.openclaw.ai/gateway/configuration)[Shell env import (optional)](https://docs.openclaw.ai/gateway/configuration/environment-variables#shell-env-import-optional)
+- [](https://docs.openclaw.ai/gateway/configuration)[Env var substitution in config values](https://docs.openclaw.ai/gateway/configuration/environment-variables#env-var-substitution-in-config-values)
+- [](https://docs.openclaw.ai/gateway/configuration)[Secret refs (env, file, exec, store)](https://docs.openclaw.ai/gateway/configuration/environment-variables#secret-refs-env-file-exec-store)
+
+## Full reference
+
+For the complete field-by-field reference, see [**Configuration reference**](https://docs.openclaw.ai/gateway/configuration-reference).
+
+* * *
+
+*Related: [Configuration Examples](https://docs.openclaw.ai/gateway/configuration-examples) · [Configuration reference](https://docs.openclaw.ai/gateway/configuration-reference) · [Doctor](https://docs.openclaw.ai/gateway/doctor)*
+
+- [Configuration reference](https://docs.openclaw.ai/gateway/configuration-reference)
+- [Configuration examples](https://docs.openclaw.ai/gateway/configuration-examples)
+- [Gateway runbook](https://docs.openclaw.ai/gateway)
+- [`openclaw config`](https://docs.openclaw.ai/cli/config) — read and write these settings from the CLI
+- [`openclaw configure`](https://docs.openclaw.ai/cli/configure) — guided editor for these settings
+- [Docker](https://docs.openclaw.ai/install/docker) — container deployment, its environment variables, and the mounted config and state paths
+- [Security audit checks](https://docs.openclaw.ai/gateway/security/audit-checks) — what the audit flags in this configuration
+- [Trusted proxy auth](https://docs.openclaw.ai/gateway/trusted-proxy-auth) — configuring the Gateway behind a reverse proxy
+
+
+===== https://docs.openclaw.ai/platforms/windows =====
+PROMPT: Extract all Windows-specific installation paths and known limitations: native Hub app, PowerShell installer, WSL2 Gateway, prerequisites, and any stated caveats or unsupported features.
+## 简要结论
+
+基于所给页面，Windows 相关安装/部署路径可归为 **6 类**：**Windows Hub（推荐）**、**Tauri desktop app（backup）**、**Native Windows CLI and Gateway / PowerShell installer**、**WSL2 Gateway**、**Gateway auto-start before Windows login**，以及 **Expose WSL services over LAN**。页面明确写道：
+
+> “The native **Windows Hub** is the recommended Windows desktop app.”
+
+并称 Tauri desktop app 为 “backup option”，且说明 “Terminal users can use the PowerShell installer or WSL2.” 对 WSL2 的定位是：
+
+> “WSL2 remains the most Linux-compatible Gateway runtime on Windows.”
+
+**关键洞察**：限制主要集中在 **Windows 版本/架构与签名运行时、Gateway pairing/命令审批、Scheduled Task/S4U 权限边界、WSL2/systemd/端口转发、远程访问 HTTPS/localhost、Windows 权限弹窗、GitHub/Git 网络，以及 2026.9.4 Windows updater 的升级阻断**。文档没有单独的 “Unsupported features” 清单，以下按主题完整抽取所有明确 caveats、限制和“不会/不能做”的行为。
+
+> 说明：这里的“安装路径”主要按页面中的“安装/部署方式”理解；文末另列文档中出现的实际 URL、文件路径、命令路径与任务名。
+
+---
+
+# 1. Windows 安装/部署路径
+
+## 1.1 推荐路径：Windows Hub / OpenClaw Companion
+
+### 定位与适用
+
+- 原生 **WinUI companion app**，是 Windows 桌面应用的推荐方案。
+- 支持 **Windows 10 20H2+ and Windows 11**。
+- 维护仓库：`openclaw/openclaw-windows-node`。
+- ** installs without administrator privileges **。
+- 提供 signed **x64** 和 **ARM64** installers，来自 Windows Hub 自己的 release page。
+- 页面强调：
+
+> “Windows Hub publishes independently from the OpenClaw CLI and Gateway.”
+
+- 包含：setup、tray status、chat、Command Center diagnostics、Windows node capabilities，以及用于本地 setup 的 **app-owned WSL Gateway**。
+
+### 下载与安装资产
+
+从 [Windows Hub releases page](https://github.com/openclaw/openclaw-windows-node/releases/latest) 下载，或使用 `releases/latest/download` 直链：
+
+- [OpenClawCompanion-Setup-x64.exe](https://github.com/openclaw/openclaw-windows-node/releases/latest/download/OpenClawCompanion-Setup-x64.exe)
+- [OpenClawCompanion-Setup-arm64.exe](https://github.com/openclaw/openclaw-windows-node/releases/latest/download/OpenClawCompanion-Setup-arm64.exe)
+
+安装后：
+
+- 从 Start menu 或 system tray 启动 **OpenClaw Companion**。
+- 安装器还添加 shortcuts：**Gateway Setup、Chat、Settings、Check for Updates、uninstall**。
+
+### Windows Hub 包含的能力
+
+- System tray status and launch-at-login。
+- First-run setup for a local **app-owned WSL Gateway**。
+- Connection settings for local、remote、SSH-tunneled Gateways。
+- Native chat window + browser Control UI。
+- Command Center diagnostics：sessions、usage、channels、nodes、pairing、repair commands。
+- Windows node mode：screen、camera、notifications、device status、talk、controlled `system.run`。
+- Local MCP server mode：面向 `Claude Desktop`、`Claude Code`、`Cursor` 等 MCP clients。
+
+### First launch / 本地 Gateway 路径
+
+首次启动时，如无 usable saved Gateway，会打开 setup：
+
+- 最快路径：**Set up locally**。
+- 会 provision 一个 app-owned `OpenClawGateway` WSL distro。
+- 在该 distro 内安装 Gateway。
+- 与 app pairing。
+- 明确说明：**不会 export 或 mutate 现有 Ubuntu distro**。
+
+已有 Gateway 时，可选 **Advanced setup** 或打开 Connections tab，连接：
+
+- a local Gateway on this PC
+- a WSL Gateway on this PC
+- a remote Gateway by URL and token or setup code
+- a Gateway reached through an SSH tunnel
+
+setup 完成后，tray icon 变 green；可从 tray 打开 **Command Center** 检查 connection、pairing、node status、channel health。
+
+### Windows node mode：命令与审批路径
+
+Node mode 让 Windows Hub 注册为 OpenClaw node，使 agent 通过 Gateway 使用 declared Windows-native capabilities。命令必须先由 node declare、进入 approved surface，并被 Gateway policy allowed。
+
+常见命令：
+
+| Family | Commands / caveats |
+|---|---|
+| Screen | `screen.snapshot`; `screen.record` requires explicit opt-in |
+| Camera | `camera.list`; `camera.snap`, `camera.clip` require explicit opt-in |
+| System | `system.notify`, `system.run`, `system.run.prepare`, `system.which` |
+| Device | `location.get`, `device.info`, `device.status` |
+| Talk | `talk.ptt.start`, `talk.ptt.stop`, `talk.ptt.cancel`, `talk.ptt.once`, `talk.speak` |
+
+Gateway host 上的设备审批：
+
+```powershell
+openclaw devices list
+openclaw devices approve <deviceRequestId>
+```
+
+Node command-surface 审批：
+
+```powershell
+openclaw nodes pending
+openclaw nodes approve <nodeRequestId>
+openclaw nodes status
+openclaw nodes describe --node <idOrNameOrIp>
+```
+
+### Local MCP mode：模式矩阵
+
+Windows Hub 可在 loopback 上暴露与 Windows-native capability registry 相同的 local MCP server，使本地 MCP clients **无需运行 OpenClaw Gateway** 也能驱动 Windows capabilities。
+
+启用位置：Windows Hub Settings 的 developer/advanced section。启用后显示 loopback endpoint 和 bearer token。
+
+| Node mode | MCP server | Behavior |
+|---|---|---|
+| off | off | Operator-only desktop app |
+| on | off | Gateway-connected Windows node |
+| off | on | Local MCP server only |
+| on | on | Gateway node plus local MCP server |
+
+---
+
+## 1.2 Backup 路径：Tauri desktop app
+
+### 定位与安装资产
+
+- Tauri app 支持 **Windows and Linux**，hosts the Gateway's Control UI。
+- 作为 regular OpenClaw release asset 发布。
+- Windows 资产：**Windows x64 NSIS installer**，命名：
+
+```text
+OpenClaw-<version>-windows-x86_64.exe
+```
+
+- 下载位置：[OpenClaw releases page](https://github.com/openclaw/openclaw/releases)。
+- 运行安装器后，从 Start menu 启动 **OpenClaw**。
+- Windows 使用 **WebView2** 显示 Control UI；installer 会在必要时 provision WebView2。
+
+### First launch / local Gateway 路径
+
+- 选择 local setup：安装 matching OpenClaw CLI 并启动 Gateway。
+- app 使用 private **Bun runtime** and package manager；**system Node.js and npm are not required**。
+- Gateway installation、startup、status、recovery 仍由 `openclaw gateway` 拥有，包括 Scheduled Task 和 Startup-folder support。
+- 关闭窗口后 app 留在 tray；local Gateway 有独立的 service lifecycle。
+
+已有 Gateway 时用 connection settings：
+
+- URL + token or password
+- SSH connection
+
+app 打开该 Gateway 的 Control UI。
+
+### 签名与更新路径
+
+- Desktop updater 会独立验证 **Tauri signatures**，独立于 Windows Authenticode。
+- Installer Authenticode signing 由 release owner 单独启用。
+- Windows 可能对 unsigned installer 显示 unknown-publisher warning。
+
+---
+
+## 1.3 Native Windows CLI and Gateway / PowerShell installer
+
+### PowerShell installer
+
+Terminal-first 安装：
+
+```powershell
+iwr -useb https://openclaw.ai/install.ps1 | iex
+```
+
+验证：
+
+```powershell
+openclaw --version
+openclaw doctor
+openclaw gateway status --json
+```
+
+安装 managed Gateway service：
+
+```powershell
+openclaw gateway install
+openclaw gateway status --json
+```
+
+CLI-only use without a managed Gateway service：
+
+```powershell
+openclaw onboard --non-interactive --accept-risk --skip-health
+openclaw gateway run
+```
+
+### PowerShell execution policy 的替代路径
+
+如果 PowerShell 提示 running scripts is disabled，页面要求 **leave the execution policy unchanged**，并改用 npm 的 `openclaw.cmd`。
+
+默认 npm prefix：
+
+```powershell
+& "$env:APPDATA\npm\openclaw.cmd" --version
+& "$env:APPDATA\npm\openclaw.cmd" doctor --generate-gateway-token
+```
+
+如果错误指向其他 `openclaw.ps1` 路径，则该目录是 npm prefix，执行同目录下的 `openclaw.cmd`：
+
+```powershell
+$shim = (Get-Command openclaw.ps1).Source
+& (Join-Path (Split-Path $shim) "openclaw.cmd") doctor --generate-gateway-token
+```
+
+### Native Windows Gateway 的路径与工作区前置条件
+
+当 Gateway 原生运行在 Windows 上时，本地 `read`、`write`、`edit` tools 接受：
+
+- Git Bash：`/f/...`
+- Cygwin：`/cygdrive/f/...`
+- WSL-style：`/mnt/f/...`
+
+这些路径会解析到对应的 Windows drive。
+
+**New workspace** 也支持 native Windows Gateway：
+
+- 需安装 **Git for Windows** 并加入 `PATH`。
+- 每个 empty workspace 从独立 Git repository 初始化，且不使用 global Git configuration。
+- Workspace creation 避免 Git for Windows' `'$GIT_DIR' too big` error。
+- Worker result staging、reads、cleanup 会为每条命令启用 Git's Windows long-path support。
+- 其他 Git clients 访问同一 deeply nested repository 时可能需要：
+
+```powershell
+git -C "<repository>" config core.longpaths true
+```
+
+### Managed Gateway startup 路径
+
+- 使用 Scheduled Task。
+- principal：current user's **S4U principal**。
+- triggers：boot 和 logon triggers。
+- action：direct `cmd.exe` action，指向可读的 `gateway.cmd` script。
+- 可在 login 前运行，且无需保存密码。
+- Installer 会报告 selected startup mode。
+- Node hosts 保留 per-user interactive tasks 以支持 desktop access。
+- 若需注册 boot tasks：从 elevated terminal 以 intended service user 运行安装。
+- `openclaw doctor --fix` 可迁移 recognized older Gateway definitions 到 unattended startup，并在 repair 前备份 definition 和 launcher；custom definitions 保持 operator-owned。
+
+### Updating from 2026.9.4：手动升级路径
+
+页面明确说：
+
+> “This containment does not complete the automatic update.”
+
+建议路径：
+
+1. 等待 updater 退出并查看结果。
+2. 创建 [verified backup](https://docs.openclaw.ai/install/updating/rollback-and-recovery#before-updating-create-a-verified-backup)。
+3. 从 independent shell 使用 [manual package-manager procedure](https://docs.openclaw.ai/install/updating/update-methods#alternative-manual-npm-pnpm-or-bun)。
+4. 保留 original service account、package prefix、profile、state/config overrides。
+5. 通过 service owner 停止 Gateway。
+6. 替换 package。
+7. 运行 newly installed Doctor。
+8. 启动并验证 Gateway。
+
+---
+
+## 1.4 WSL2 Gateway 路径
+
+Windows Hub 可设置 app-owned WSL Gateway，也可在自己的 distro 内手动安装。
+
+### Manual setup：PowerShell
+
+```powershell
+wsl --install
+# Or pick a distro explicitly:
+wsl --list --online
+wsl --install -d Ubuntu-24.04
+```
+
+### Enable systemd inside WSL：bash
+
+```bash
+sudo tee /etc/wsl.conf >/dev/null <<'EOF'
+[boot]
+systemd=true
+EOF
+```
+
+### Restart WSL：PowerShell
+
+```powershell
+wsl --shutdown
+```
+
+### Install OpenClaw inside WSL
+
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash
+openclaw gateway status
+```
+
+---
+
+## 1.5 Gateway auto-start before Windows login
+
+用于 headless WSL setups，确保 no one logs into Windows 时完整 boot chain 仍运行。
+
+### Inside WSL
+
+```bash
+sudo apt-get install -y dbus-x11
+sudo loginctl enable-linger "$(whoami)"
+openclaw gateway install
+```
+
+### In PowerShell as Administrator
+
+```powershell
+schtasks /create /tn "WSL Boot" /tr "wsl.exe -d Ubuntu --exec dbus-launch true" /sc onstart /ru "$env:USERNAME"
+```
+
+替换 `Ubuntu` 时使用：
+
+```powershell
+wsl --list --verbose
+```
+
+### After reboot：WSL 内验证
+
+```bash
+systemctl --user is-enabled openclaw-gateway.service
+systemctl --user status openclaw-gateway.service --no-pager
+```
+
+---
+
+## 1.6 Expose WSL services over LAN
+
+WSL 有自己的 virtual network；若其他机器需要访问 WSL 内服务，需要把 Windows port 转发到当前 WSL IP。WSL IP 可能在重启后变化，因此需刷新 forwarding rule。
+
+PowerShell as Administrator 示例：
+
+```powershell
+$Distro = "Ubuntu-24.04"
+$ListenPort = 2222
+$TargetPort = 22
+$WslIp = (wsl -d $Distro -- hostname -I).Trim().Split(" ")[0]
+if (-not $WslIp) { throw "WSL IP not found." }
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=$ListenPort `
+  connectaddress=$WslIp connectport=$TargetPort
+New-NetFirewallRule -DisplayName "WSL SSH $ListenPort" -Direction Inbound `
+  -Protocol TCP -LocalPort $ListenPort -Action Allow
+```
+
+Notes：
+
+- 其他机器 SSH 时目标是 Windows host IP，例如：`ssh user@windows-host -p 2222`。
+- Remote nodes 必须指向 reachable Gateway URL，不能是 `127.0.0.1`。
+- `listenaddress=0.0.0.0` 用于 LAN access；`127.0.0.1` 用于 local-only access。
+
+---
+
+# 2. 关键 URL、文件路径、命令路径与任务名
+
+## 下载 / 安装 / 发布页
+
+| 类别 | 路径 / URL |
+|---|---|
+| Windows Hub releases | `https://github.com/openclaw/openclaw-windows-node/releases/latest` |
+| Windows Hub releases fallback | `https://github.com/openclaw/openclaw-windows-node/releases` |
+| Hub x64 installer | `https://github.com/openclaw/openclaw-windows-node/releases/latest/download/OpenClawCompanion-Setup-x64.exe` |
+| Hub arm64 installer | `https://github.com/openclaw/openclaw-windows-node/releases/latest/download/OpenClawCompanion-Setup-arm64.exe` |
+| OpenClaw releases / Tauri asset | `https://github.com/openclaw/openclaw/releases` |
+| PowerShell installer | `https://openclaw.ai/install.ps1` |
+| WSL/Linux quickstart installer | `https://openclaw.ai/install.sh` |
+| Tauri Windows installer name | `OpenClaw-<version>-windows-x86_64.exe` |
+| Hub installers | `OpenClawCompanion-Setup-x64.exe`、`OpenClawCompanion-Setup-arm64.exe` |
+
+## 本机路径 / 本机组件
+
+| 类别 | 路径 / 名称 |
+|---|---|
+| Tauri app-managed CLI launcher | `%USERPROFILE%\.openclaw\bin\openclaw.cmd` |
+| npm 默认 global shim | `"$env:APPDATA\npm\openclaw.cmd"` |
+| npm shim 错误定位 | `openclaw.ps1`、`Join-Path (Split-Path $shim) "openclaw.cmd"` |
+| Windows Hub setup log | `"$env:LOCALAPPDATA\OpenClawTray\Logs\Setup\easy-setup-latest.txt"` |
+| Gateway stdout redirect example | `"%USERPROFILE%\.openclaw\logs\gateway-stdout.log"` |
+| Gateway launcher script | `gateway.cmd` |
+| pnpm stable link | `node_modules/openclaw` |
+| Recovery files | `.task.xml.bak`、launcher `.bak` |
+| Task script 附近 recovery files | “beside the task script” |
+| WSL app-owned distro | `OpenClawGateway` |
+| WSL config | `/etc/wsl.conf` |
+| WSL service | `openclaw-gateway.service` |
+| Tray process | `OpenClaw.Tray.WinUI.exe` |
+| Windows scheduled task | `"OpenClaw Gateway"`、`"WSL Boot"` |
+| Local builds running Gateway check | installation's `dist` |
+| Git long-path config example | `core.longpaths=true` |
+| Supervisor logs | `gateway/task-supervisor` |
+
+---
+
+# 3. 已知限制、注意事项与明确“不会/不能做”的行为
+
+## 3.1 Windows Hub、node mode 与 MCP mode 限制
+
+### 发布与安装限制
+
+- Windows Hub 仅声明支持 **Windows 10 20H2+ and Windows 11**；页面未声明对更早 Windows 版本的支持。
+- Windows Hub 独立发布；regular OpenClaw stable releases 会 mirror 一个 **pinned, release-validated** Windows Hub build，但该 mirror **can lag** newer standalone Hub release。
+- 若 direct `releases/latest/download` link 404，需到 Windows Hub releases page 打开 newest stable release。
+- Windows Hub 的 standalone release 可能比 OpenClaw stable mirror 更新。
+- Windows Hub 的 **Set up locally** 使用 app-owned `OpenClawGateway` WSL distro，**does not export or mutate your existing Ubuntu distro**。
+- Local setup 失败的常见原因包括：disabled WSL、blocked virtualization、stale app-owned WSL state、安装 Gateway package 时 network failure。
+- 若 tray icon 不出现：在 Task Manager 检查 `OpenClaw.Tray.WinUI.exe`；若正在运行，打开 hidden tray-icons area 并 pin；否则从 Start menu 启动 **OpenClaw Companion**。
+- Local setup log 可从 Windows Hub 打开，或检查：
+
+```powershell
+notepad "$env:LOCALAPPDATA\OpenClawTray\Logs\Setup\easy-setup-latest.txt"
+```
+
+### Node mode 与 pairing 限制
+
+- Node commands 必须由 node declared、包含于 approved surface、并由 Gateway policy allowed 后才能运行。
+- Gateway 只转发 node declares 且 server policy allows 的命令。
+- **Device approval admits the connection only**。
+- 两个 request IDs 是不同的：`deviceRequestId` 与 `nodeRequestId`。
+- 初始 unapproved surface **has no effective commands**。
+- 如果 node mode 因 manual pairing 暂停，需要 restart node mode 或 app 以重新连接；重连会创建 separate command-surface request。
+- 在 pending expansion 期间，仍 declared 且 allowed 的 approved commands 仍可运行。
+- SSH-verified 和 bootstrap enrollment 可自动批准 first surface；**trusted-network device approval alone does not**。
+- Later command、capability 或 permission expansion **still requires approval**。
+- Privacy-sensitive commands 如 `screen.record`、`camera.snap`、`camera.clip` 需要显式 `gateway.nodes.commands.allow` opt-in。
+- 若 app 提示 pairing required，需要在 Gateway 上批准 operator 或 node request：
+
+```powershell
+openclaw devices list
+openclaw devices approve <requestId>
+```
+
+- 如果 device 已有 token，审批后需从 Connections tab reconnect。
+- For a node request：必须完成 separate command-surface approval；重启 paused node mode，然后 `openclaw nodes pending` 并批准 distinct node request ID。
+- **Operator-device approval alone does not complete that node flow**。
+
+### Local MCP mode 限制
+
+- Local MCP server 仅在 **loopback** 上暴露。
+- 启用后显示 loopback endpoint 和 bearer token。
+- 可在 **without a running OpenClaw Gateway** 的情况下让 local MCP clients 驱动 Windows capabilities。
+- 可与 Gateway node mode 同时开启，也可单独开启；模式矩阵见 1.1。
+
+---
+
+## 3.2 Tauri desktop app 限制
+
+页面明确写道：
+
+> “Local setup requires a signed Windows Bun runtime in the app's pinned release.”
+
+以及：
+
+> “Linux, macOS, and unsigned test binaries are never substituted for a Windows release runtime.”
+
+具体限制：
+
+- 若旧版 app 报告 **“This app does not include a signed Windows Gateway runtime”**，必须更新到带 signed Windows runtime 的 app release，或连接 remote Gateway。
+- **Installing system Node.js does not change the bundled runtime's admission policy**。
+- Remote connections 在该情况下仍可继续工作。
+- signed runtime unavailable 时：更新 desktop app 到 Windows-enabled runtime release，或使用 remote Gateway。
+- Linux、macOS、unsigned test binaries 不会被替代为 Windows release runtime。
+- Download 或 installation failed：检查 internet connection 和 proxy，然后 retry local setup；error panel 保留 installer diagnostics。
+- Gateway will not start：使用 tray 的 Gateway controls 并检查 `openclaw gateway status --json`。
+- app-managed CLI launcher 是 `%USERPROFILE%\.openclaw\bin\openclaw.cmd`；若该目录不在 `PATH`，需用 full path 调用。
+- Startup task denied：service owner 会报告是否注册了 task 或 logon fallback。
+- Desktop updater 的 Tauri signature 验证独立于 Windows Authenticode；Installer Authenticode signing 需 release owner 单独启用。
+- Windows 可能对 unsigned installer 显示 unknown-publisher warning。
+- 页面在 Tauri 部分只列出 **Windows x64 NSIS installer**；未列出 Tauri 的 ARM64 Windows 资产。
+- Closing window 只让 app 留在 tray；local Gateway 有独立 service lifecycle。
+
+---
+
+## 3.3 Native Windows CLI / Gateway / Scheduled Task / PowerShell 限制
+
+### PowerShell 执行策略与 shim
+
+- Windows PowerShell 的 effective execution policy 为 Restricted 时，bare `openclaw` 会解析到 npm 的 `openclaw.ps1` shim，并在 OpenClaw 启动前停止。
+- 页面要求 **Leave the execution policy unchanged**。
+- install 还包含同目录的 `openclaw.cmd`。
+- 该 `openclaw.cmd` 是 npm global shim，**not the desktop app launcher at `%USERPROFILE%\.openclaw\bin\openclaw.cmd`**。
+- 若错误指向不同 `openclaw.ps1` 路径，该目录就是 npm prefix；应运行旁边的 `openclaw.cmd`。
+- Doctor 可能请求在 review repairs 时 pause managed Gateway；若接受，Doctor 结束时会恢复 previous service state。
+- A new token 以及之后的 Gateway restart 会断开仍使用 previous secret 的 clients。
+
+### S4U、权限与启动模式
+
+页面明确写道：
+
+> “S4U does not provide Windows network credentials or access to encrypted files; installations that need those capabilities can retain an operator-configured Password task.”
+
+相关限制：
+
+- Managed Gateway startup 使用 current user's S4U principal、boot/logon triggers、direct `cmd.exe` action。
+- S4U 可在 login 前运行且不存储 password。
+- 但 S4U **不提供 Windows network credentials 或 access to encrypted files**。
+- 需要这些能力的安装可保留 operator-configured Password task。
+- Reinstall 只刷新 launcher files，不替换 account、credentials、action、triggers。
+- Agent exec 优先 native PowerShell 7 executable，fallback 到 Windows PowerShell 5.1。
+- Inaccessible Microsoft Store app-execution aliases 会被跳过；它们在 S4U 且 PowerShell 运行于另一个 logon session 时可能以 `spawn EPERM` 失败。
+- 若 unattended exec commands 需要 PowerShell 7 语法（如 `&&`），需用 MSI 或 ZIP 安装 PowerShell 7。
+- Node hosts 保留 per-user interactive tasks 以支持 desktop access。
+- 如果 account cannot be identified 或 task creation denied：desktop task 或 Startup-folder fallback **requires interactive logon**，且 **cannot provide unattended boot startup**。
+- 注册 boot tasks 需从 elevated terminal 以 intended service user 运行安装。
+- `openclaw doctor --fix` 只迁移 recognized older Gateway definitions；custom definitions 保持 operator-owned。
+
+### `gateway.cmd`、launcher、task ownership
+
+- 若向 `gateway.cmd` launch line 追加 output redirection，必须 quote entire target，例如：
+
+```text
+>> "%USERPROFILE%\.openclaw\logs\gateway-stdout.log" 2>&1
+```
+
+- Complete trailing redirections 会被排除在 process ownership checks 之外。
+- Unquoted environment expansions 可能在 Gateway arguments 中留下 filename fragments。
+- OpenClaw 会保留 ambiguous launcher commands，并 **refuses to terminate a listener whose ownership cannot be verified**。
+- 需 quote target 后重试。
+- Task launcher owns supervised Gateway process tree。
+- 用 `schtasks /end /tn "OpenClaw Gateway"`、`Stop-ScheduledTask` 或 Task Scheduler 的 **End** 会终止 Gateway 及其 descendants。
+- 更新旧安装后，如果 update 未刷新 launcher，需运行：
+
+```powershell
+openclaw gateway install --force
+```
+
+- pnpm global installs 的新 launchers 使用 verified stable `node_modules/openclaw` link，避免 package replacement 使其失效。
+- 旧 launcher 若指向 deleted package generation，需从 current installation 运行 `openclaw gateway install --force` 重写 `gateway.cmd`。
+- 不使用 `--force` 时，registered task 可能保持不变。
+- Reinstalling managed Scheduled Task 会先 stop 和 settle previous process，再 publish/start replacement；同样适用于 both installations use Node 或仅 service arguments 改变的情况。
+- Status 会用 registered command 验证 running process；同名同端口的 older process **does not prove the replacement is running**。
+- Installation 保留 existing service lock 和 runtime-pin checks；changed task 或 launcher 会 **block replacement**。
+- Ordinary installation failures 使用 service owner 的 recovery 恢复 previous definition 和 running policy，前提是 ownership 仍可验证。
+- Update 期间 updater 保留 recovery ownership；若 recovery 无法确认，需先检查 reported Task Scheduler state 再重试。
+- Scheduler takeover evidence 和 Startup login-item reprobes 使用 elapsed-time budgets；wall-clock corrections 不会延长或提前结束等待。
+- Publication 接受 filesystem timestamp changes，前提是 launcher identity、permissions、contents 仍匹配。
+- Reinstallation 会报告保留在 task script 旁的 `.task.xml.bak` 和 launcher `.bak` recovery files。
+
+### Status、Doctor、deep inspection 的限制
+
+- Gateway status 和 Doctor 读取 Scheduled Task 的 numeric current state，独立于 Windows display language 或 console code page。
+- A previous task exit result **does not prove whether it is running now**。
+- Queued 或 unknown tasks **do not count as safely stopped** for Doctor maintenance。
+- 需通过 service owner 停止 queued task；若 inspection inaccessible，需先 restore Task Scheduler inspection permissions。
+- Updates 和 service recovery 通过 Task Scheduler native API 修改 enabled state。
+- Access-denied guidance 使用 numeric HRESULT，而不是 translated Windows error text。
+- Uncertain disable 仍会尝试恢复 previous enabled state；confirmed permission denial 会保持 task unchanged 并 request elevation。
+- Enabled-state changes 允许最多 60 seconds 给 Windows PowerShell cold startup。
+- Strict maintenance inspection 只跟随 registered CMD 或 VBS launcher，或带 literal arguments 的 directly registered executable，并会 recheck captured definition。
+- Runtime inspection 使用 registered command，而不是 default launcher。
+- Direct executable inspection **does not grant ownership** 去重写 executable 或 task definition。
+- Automatic update service management 将 custom actions 报告为 unavailable 并保持 untouched，因为无法 restore managed launcher。
+- Environment expansion 和 ambiguous argument quoting 仍 **uninspectable**。
+- Deep discovery 从 executable 或 launcher evidence 识别 OpenClaw 和 legacy helpers；unrelated task 的 display name alone **does not identify a service**。
+- Standard 和 selected task names 只在 registered action 是 modern Gateway 时 suppress extra-service findings；legacy 和 Node actions 仍可见。
+- Doctor 将 incomplete inspection 与 eligible for existing cleanup 的 services 分开报告。
+- 对 rejected CMD launcher line：status/update warnings 报告 rejected rule 和 physical line number，且 counting blank lines and comments；diagnostics 会 omit launcher text and environment values。
+- 被拒行需 review，并使用 literal values with a single Gateway command 后重试。
+- Inspection 不修改 launcher，也不授权 rewrite custom behavior。
+- `openclaw gateway status --deep` 和 `openclaw doctor --deep` 报告 current account Startup folder 中的 sibling profiles。
+- 若其 Scheduled Task absent，selected modern Gateway fallback 会从 extra-service list 中省略。
+- 每个 Startup file 即使与 task 同名，仍是 separate service definition。
+- Inspection 跟随 exact file 和 captured Gateway script。
+- Complete inventory 保留 unreadable 或 malformed Gateway launchers 的 errors；Doctor/status 只列出 successfully inspected extra services。
+- Startup inspection hints 使用 exact file path，且 **do not grant Task Scheduler control over it**。
+- Local builds 会用 installation's `dist` 检查这些 definitions 是否有 running Gateway；重建文件前需 stop matching Gateway。
+- Doctor 和 deep status 提供 read-only `schtasks /Query` hints，包括 Node hosts。
+- Discovery 在 inventory query、Startup directory scan、launcher inspection 之间共享一个 60-second budget；若超时，completed discoveries 仍可用，Doctor 会报告 some services could not be inspected。
+- 选择通过 service owner removal 前，需 review registered command 和 purpose。
+- Doctor 识别 2026.9.3 shipped 的 waiting VBS launcher；custom launcher behavior 仍保留 existing definition。
+- Doctor 使用 Task Scheduler defaults 比较 task definitions；omitted `Enabled` element 意味着 task 和 logon trigger 均为 `true`，XML export differences 不会触发 drift warnings 或 failed refresh verification。
+- Explicitly disabled tasks 和 triggers 仍会报告。
+- Status/Doctor 容忍 scheduler-injected `UseUnifiedSchedulingEngine=true`；replacement verification 仍防止该值被 silently discarded。
+- Task check 允许 Windows PowerShell inherit 或 create console，因为某些 PowerShell 5.1 hosts 在禁用 console creation 时无法 inspection。
+- 从无 console 的 app 调用时可能短暂显示 console window。
+- 无 explicit caller deadline 时，每个 check 允许最多 60 seconds 给 PowerShell cold startup；registration inspection 与 Startup-folder checks 共享 budget。
+- Explicit inspection budgets 会替换 default allowance；其他 direct lifecycle commands 保留 existing limits。
+- Access-denied 和 timeout results 是 inspection failures，**not proof that a task is absent**。
+- Inspection 失败时，Doctor 和 update refusals 会包含 underlying check detail；empty response 会识别 exit code 并报告 PowerShell produced no output。
+- Previous-Gateway readiness verification 中，每个 Scheduled Task runtime check 最多 5 seconds，或更短的 remaining budget。
+- Other service inspections 保留 caller's budget，包括验证 runtime rebuild 安全的较长 allowance。
+- Update preflight 使用 update 的 `--timeout` budget；registration 或 runtime timeout 会重试 complete strict inspection once。
+- 若 inspection 仍 unavailable：update 报告 enforced budget 和 check detail，保留 recorded service definition，并 **skips automatic service restart**。
+- 此时需先用 `openclaw gateway status --deep` inspect，再在 update 后手动 restart。
+- Losing verified ownership after admission 会 block service mutation。
+
+### Gateway startup、SQLite staging 与 antivirus
+
+- Gateway startup 通过 Windows APIs 创建 private SQLite staging directories，不编译 C#，也不启动 PowerShell 处理 permissions。
+- Owner、SYSTEM、Administrators 保留 full access；其他 inherited access 在 creation 时被移除。
+- Update restart helpers 避免 runtime C# compilation 和 `Invoke-Expression`。
+- 若 antivirus software 仍 interrupt start，报告中需包含 detection name 和 `openclaw gateway status --json` 输出。
+
+### Scheduled Task troubleshooting 限制
+
+- 若 registered 但 **DISABLED** task：`openclaw gateway status` 和 Doctor 会命名该 task 并显示 recovery command。
+- 可运行 `openclaw gateway start` 或 `openclaw doctor --fix` 重新启用并启动 managed Gateway。
+- 需使用与 installation 相同的 profile、state/config overrides。
+- Recovery 会先验证 registered launcher 和 task ownership；foreign 或 unverifiable task 保持不变并给出解释。
+- Disabled task 在重新启用前，不能 after login 或 reboot 自动启动。
+- 若 Scheduled Task stops before Gateway is ready：运行 `openclaw gateway status --json` 并检查 local Gateway log。
+- `gateway/task-supervisor` 记录 child exit code、signal、最后 8,192 characters of stderr，包括 Gateway logging 启动前的 failures。
+- Child stdout is discarded。
+- Failed child 或 supervisor exits nonzero；intentional clean stop exits zero。
+- A successful task result alone **does not prove the Gateway is healthy**。
+- Task Scheduler 的 `RestartOnFailure` policy 只重试 failed start conditions 或 action launches；**Do not rely on it** 来重启“成功启动后又因错误退出”的 Gateway，例如 occupied port。
+- 应先修复 logged cause，再运行 `openclaw gateway start`。
+
+---
+
+## 3.4 WSL2、headless WSL 与 LAN 暴露限制
+
+- WSL2 被描述为 most Linux-compatible Gateway runtime on Windows，但仍需 WSL/systemd 配置。
+- Manual setup 需要 `wsl --install` 或显式 distro 安装，例如 `Ubuntu-24.04`。
+- 必须在 WSL 内启用 `systemd=true` 并 `wsl --shutdown` 重启 WSL。
+- WSL has its own virtual network；其他机器访问 WSL 内服务需 Windows port forwarding。
+- WSL IP can change after restarts，因此需 refresh forwarding rule。
+- Remote nodes 必须指向 reachable Gateway URL，不能是 `127.0.0.1`。
+- `listenaddress=0.0.0.0` 用于 LAN access；`127.0.0.1` 只用于 local-only access。
+- SSH 从其他机器连接时，目标是 Windows host IP，例如 `ssh user@windows-host -p 2222`。
+- Expose WSL services 的 PowerShell 命令需 as Administrator 运行。
+- Headless WSL setup 需要 `dbus-x11`、`loginctl enable-linger "$(whoami)"`、`openclaw gateway install`，以及 Windows Scheduled Task `"WSL Boot"`。
+- `Ubuntu` 需替换为 `wsl --list --verbose` 得到的 distro name。
+- WSL >= 2.6.1.0 存在 regression（microsoft/WSL #13416）：即使 linger enabled，最后一个 client 退出后 15–20 seconds 会 idle-terminate distro。
+- 因此使用 `dbus-launch true` 而不是 `/bin/true`；`dbus-launch true` 作为 workaround 保持 child-of-init process alive（community discussion：microsoft/WSL #9245）。
+- `/ru "$env:USERNAME"` 替代 `/ru SYSTEM`，因为 per-user WSL distros 默认对 SYSTEM account 不可见；若用 SYSTEM，task 看似运行但 distro 永不启动。
+- 以自己账户运行可避免该问题；创建 task 时 Windows 会提示输入密码。
+- Reboot 后需验证 `systemctl --user is-enabled openclaw-gateway.service` 和 `systemctl --user status openclaw-gateway.service --no-pager`。
+- Windows Hub local setup 失败的常见原因包括 disabled WSL、blocked virtualization、stale app-owned WSL state、安装 Gateway package 时 network failure。
+
+---
+
+## 3.5 2026.9.4 Windows updater 限制
+
+- Published 2026.9.4 Windows updater 在 service handoff 中保留 old database reader。
+- 若 target migrates shared state beyond schema 17，activation 后 callback 可能失败。
+- 在 running 9.4 update 期间，candidate package lifecycle 会让 Doctor's read-only preflight 在 updater driver 未确认 stopped 时拒绝该 migration。
+- Failed npm stage 会在 old updater 进入 repair 前保留 original package 和 Gateway。
+- CLI preflight 在 package scripts skipped 时仍保留该检查；后续 refusal 可能被 old repair path 的 cleanup error 掩盖。
+- 页面明确说该 containment **does not complete the automatic update**。
+- 需等待 updater 退出并 review result。
+- 升级需 verified backup + independent shell 中 manual package-manager procedure。
+- 必须保留 original service account、package prefix、profile、state/config overrides。
+- 替换 package 前需通过 owner 停止 Gateway。
+- 替换后运行 newly installed Doctor，再启动并验证 Gateway。
+- **Do not lower schema markers or run an older build against migrated data**。
+
+---
+
+## 3.6 远程访问、Windows 权限、Git/GitHub 与安全限制
+
+页面明确写道：
+
+> “Remote web chat needs HTTPS or localhost.”
+
+相关限制：
+
+- Remote web chat 需要 HTTPS 或 localhost。
+- 对 self-signed certificates，需在 Windows 中 trust certificate，或使用 SSH tunnel 到 localhost URL。
+- Remote nodes 必须指向 reachable Gateway URL，不能是 `127.0.0.1`。
+- `screen.snapshot`、camera 或 audio commands 失败时，需确认 Windows permissions：camera、microphone、screen capture、notifications。
+- Packaged installs 声明 protected capabilities，但 Windows 仍可能在第一次使用相关命令时 prompt。
+- Some networks block or throttle HTTPS to GitHub；若 `git clone` 或 `gh auth login` 失败，可尝试 another network、VPN 或 HTTP/HTTPS proxy。
+- 当前 session 的 token-based `gh` auth：
+
+```powershell
+$env:GH_TOKEN="<your-token>"
+gh auth status
+gh auth setup-git
+```
+
+- 页面明确警告：**Never commit tokens or paste them into issues or pull requests**。
+
+---
+
+# 4. 最需要优先关注的限制清单
+
+1. **Windows Hub**：只声明支持 Windows 10 20H2+ / Windows 11；signed x64/ARM64 installers；无需 admin；本地 setup 不改动已有 Ubuntu，但依赖 WSL/virtualization/network。
+2. **Tauri backup**：local setup 强制要求 signed Windows Bun runtime；system Node.js 不改变该策略；Linux/macOS/unsigned test binaries 不会替代 Windows runtime；文档只列 Windows x64 NSIS installer。
+3. **PowerShell installer**：执行策略受限时不要改 execution policy，改用 npm `openclaw.cmd`。
+4. **Native Gateway Scheduled Task**：S4U 可 before login 运行，但不提供 Windows network credentials 或 encrypted files access；fallback startup 不能提供 unattended boot startup。
+5. **Node mode / MCP**：pairing、command-surface approval、policy allow、explicit opt-in 缺一不可；privacy-sensitive commands 需 `gateway.nodes.commands.allow`；local MCP server 仅 loopback。
+6. **WSL2 / LAN**：systemd 必须启用；WSL IP 会变化；`dbus-launch true` 是 WSL >= 2.6.1.0 regression workaround；`/ru SYSTEM` 不适用于默认 per-user WSL distros；remote nodes 不能用 `127.0.0.1`。
+7. **远程与权限**：remote web chat 需 HTTPS/localhost；self-signed cert 需 Windows trust 或 SSH tunnel；camera/microphone/screen capture/notifications 仍可能触发 Windows prompt。
+8. **2026.9.4 更新**：自动更新 containment 不完成升级；需 verified backup 和 manual package-manager procedure；不要降低 schema markers 或用旧 build 跑 migrated data。
+
+
+===== https://docs.x.ai/build/cli/headless-scripting =====
+PROMPT: Extract all headless CLI flags, output formats, exit codes, stdin/stdout behaviour, automation examples, and any warnings about non-interactive use.
+**标题**: Headless & Scripting | SpaceXSI Docs
+
+# [Headless & Scripting](https://docs.x.ai/build/cli/headless-scripting#headless--scripting)
+
+Copy for LLM[View as Markdown](https://docs.x.ai/build/cli/headless-scripting.md)
+
+[Create API key](https://console.x.ai/team/default/api-keys?utm_source=docs&utm_medium=referral&utm_campaign=build-cli-headless-scripting&utm_content=article-api-key)[Meet grok-4.7](https://x.ai/news/grok-4-7)
+
+## [Headless mode](https://docs.x.ai/build/cli/headless-scripting#headless-mode)
+
+Use headless mode for scripts, bots, or other machine-friendly tasks.
+
+Bash
+
+```
+grok -p "Your prompt here"
+```
+
+Common flags:
+
+FlagWhat it does`-p, --single <PROMPT>`Send one prompt`-m, --model <MODEL>`Choose a model`-s, --session-id <ID>`Create or resume a named headless session`-r, --resume <ID>`Resume an existing session`-c, --continue`Continue the most recent session in the current directory`--cwd <PATH>`Set the working directory`--output-format <FMT>`Choose `plain`, `json`, or `streaming-json``--always-approve`Auto-approve tool executions`--no-alt-screen`Run inline (no alternate screen / fullscreen TUI takeover)
+
+**Sessions:** Headless sessions (via `--session-id`, `--resume`, `--continue`) are stored in `~/.grok/sessions`.
+
+**Suppressing updates in xai-grok-shell:** When using headless mode (`-p`) or ACP (`grok agent stdio`) in scripts, CI, or other automated environments, pass `--no-auto-update` (e.g. `grok --no-auto-update -p "..."`) to skip background update checks. You can also persistently disable them by setting `auto_update = false` under the `[cli]` section in `~/.grok/config.toml`.
+
+## [Output formats](https://docs.x.ai/build/cli/headless-scripting#output-formats)
+
+- `plain`: human-readable text
+- `json`: one JSON object at the end
+- `streaming-json`: newline-delimited JSON events
+
+Bash
+
+```
+grok -p "List TODO comments" --output-format json
+grok -p "Explain the architecture" --output-format streaming-json
+```
+
+Streaming JSON emits incremental events as they arrive.
+
+## [ACP](https://docs.x.ai/build/cli/headless-scripting#acp)
+
+Use ACP when you want IDE or tool integration rather than a terminal session.
+
+Bash
+
+```
+grok agent stdio
+```
+
+This runs Grok as an ACP agent over JSON-RPC on stdin/stdout. The example below assumes `grok` is already authenticated locally, or `XAI_API_KEY` is set. `session/prompt` returns completion metadata; the assistant text itself arrives as `session/update` chunks.
+
+JavaScript
+
+```
+import { spawn } from "node:child_process";
+import readline from "node:readline";
+import process from "node:process";
+
+const proc = spawn("grok", ["agent", "stdio"], { stdio: ["pipe", "pipe", "pipe"] });
+const rl = readline.createInterface({ input: proc.stdout });
+const pending = new Map();
+let nextId = 1;
+let text = "";
+
+proc.stderr.on("data", chunk => process.stderr.write(chunk));
+
+rl.on("line", line => {
+  const message = JSON.parse(line);
+
+  if (message.method === "session/update") {
+    const update = message.params?.update;
+    if (update?.sessionUpdate === "agent_message_chunk" && update.content?.text) {
+      text += update.content.text;
+    }
+    return;
+  }
+
+  const pendingRequest = pending.get(message.id);
+  if (!pendingRequest) return;
+
+  pending.delete(message.id);
+  if (message.error) {
+    pendingRequest.reject(new Error(message.error.message ?? JSON.stringify(message.error)));
+  } else {
+    pendingRequest.resolve(message.result ?? {});
+  }
+});
+
+function request(method, params, timeoutMs = 30000) {
+  const id = nextId++;
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error(`${method} timed out`));
+    }, timeoutMs);
+
+    pending.set(id, {
+      resolve(result) {
+        clearTimeout(timer);
+        resolve(result);
+      },
+      reject(error) {
+        clearTimeout(timer);
+        reject(error);
+      },
+    });
+
+    proc.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n");
+  });
+}
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+try {
+  const init = await request("initialize", {
+    protocolVersion: 1,
+    clientCapabilities: {
+      fs: { readTextFile: true, writeTextFile: true },
+      terminal: true,
+    },
+  });
+
+  const authMethods = new Set((init.authMethods ?? []).map(method => method.id));
+  const methodId =
+    process.env.XAI_API_KEY && authMethods.has("xai.api_key")
+      ? "xai.api_key"
+      : authMethods.has("cached_token")
+        ? "cached_token"
+        : null;
+
+  if (!methodId) {
+    throw new Error("Run `grok login` first, or set XAI_API_KEY.");
+  }
+
+  await request("authenticate", { methodId, _meta: { headless: true } });
+
+  const { sessionId } = await request("session/new", {
+    cwd: process.cwd(),
+    mcpServers: [],
+  });
+
+  const prompt = await request("session/prompt", {
+    sessionId,
+    prompt: [{ type: "text", text: "Say hello in one short sentence." }],
+  });
+
+  let lastLength = -1;
+  let stableChecks = 0;
+  while (stableChecks < 2) {
+    await sleep(150);
+    if (text.length === lastLength) {
+      stableChecks += 1;
+    } else {
+      lastLength = text.length;
+      stableChecks = 0;
+    }
+  }
+
+  console.log(text.trim() || `No text returned (stopReason=${prompt.stopReason})`);
+} finally {
+  rl.close();
+  proc.kill();
+}
+```
+
+
+===== https://docs.openclaw.ai/gateway/security =====
+PROMPT: Extract the security model verbatim: trust boundary statements, default bind address, authentication, pairing, sandbox options, tool approval, and the exact commands recommended for a security audit.
+## 简要结论
+
+我从页面中提取到与请求相关的安全模型原文。当前页面是 **Security** 索引/导航页：对 **trust boundary、默认绑定、pairing、audit 命令** 有明确逐字表述；对 **authentication、sandbox options、tool approval** 主要给出链接标题和目录描述，未展开具体配置项或审批规则。以下所有英文引用均保留页面原文，未翻译或改写。
+
+**关键发现**
+
+- 默认主机安装中，Gateway 绑定原文为 **“loopback”**；容器镜像例外为 **“exposed bind”**，并明确要求 **“pair that with auth”**。
+- 信任边界核心语句是 **“One trust boundary per gateway.”**，且明确说明 OpenClaw **不是** 面向互相对抗用户的 hostile multi-tenant 安全边界。
+- 安全审计的精确命令是 **`openclaw security audit`**；CLI 章节还列出 **`openclaw security`** 和 **`openclaw policy`**。
+- 页面未逐字出现 **“tool approval”**；最接近的是 **“command authorization”**、**“tool policy”**、**“tool-restricted”** 和 **“cross-provider messaging restrictions”**。
+
+---
+
+## 1. 信任边界语句（逐字）
+
+```markdown
+**Note**
+
+**One trust boundary per gateway.** This guidance assumes one trusted boundary per gateway: a single operator, or a team whose members trust each other. Group chats and [multi-user](https://docs.openclaw.ai/concepts/multi-user) operation are supported deployments inside that boundary. OpenClaw is not a hostile multi-tenant security boundary for mutually adversarial users sharing one agent or gateway. For mixed-trust or adversarial-user operation, split trust boundaries: separate gateway + credentials, ideally separate OS users or hosts.
+```
+
+```markdown
+Understand the model:
+
+- [Security trust model](https://docs.openclaw.ai/gateway/security/trust-model) - One trust boundary per gateway, the boundary matrix, and the findings closed as no-action.
+```
+
+页面中与 trust boundary 相关的原始锚点条目包括：
+
+```markdown
+[**Security trust model**](https://docs.openclaw.ai/gateway/security/trust-model)
+
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Scope: one trust boundary per gateway](https://docs.openclaw.ai/gateway/security/trust-model#scope-one-trust-boundary-per-gateway)
+- [](https://docs.openclaw.ai/gateway/security)[Trust boundary matrix](https://docs.openclaw.ai/gateway/security/trust-model#trust-boundary-matrix)
+- [](https://docs.openclaw.ai/gateway/security)[Common findings closed as no-action](https://docs.openclaw.ai/gateway/security/trust-model#common-findings-closed-as-no-action)
+- [](https://docs.openclaw.ai/gateway/security)[Gateway and node trust](https://docs.openclaw.ai/gateway/security/trust-model#gateway-and-node-trust)
+```
+
+与默认信任例外相关的原文：
+
+```markdown
+The exceptions are deliberate and documented: container images default to an exposed bind (pair that with auth - see the [exposure runbook](https://docs.openclaw.ai/gateway/security/exposure-runbook)), and a few workspace channels such as ClickClack trust workspace membership by default - each channel page states its exact defaults.
+```
+
+---
+
+## 2. 默认绑定地址与默认安全姿态（逐字）
+
+页面没有给出具体 IP（如 `127.0.0.1`），只逐字写明 **“loopback”** 和 **“exposed bind”**。
+
+```markdown
+OpenClaw ships with conservative defaults. On a regular host install the Gateway binds to loopback; most chat channels answer an unknown DM sender with a pairing code instead of processing the message; and group access is allowlisted, usually behind a mention gate. The exceptions are deliberate and documented: container images default to an exposed bind (pair that with auth - see the [exposure runbook](https://docs.openclaw.ai/gateway/security/exposure-runbook)), and a few workspace channels such as ClickClack trust workspace membership by default - each channel page states its exact defaults. Run on those defaults and you are in good shape, and one command tells you if you have drifted:
+```
+
+相关加固/暴露页面描述：
+
+```markdown
+- [Hardened baselines](https://docs.openclaw.ai/gateway/security/hardened-baseline) - Copy/paste configs that keep the Gateway local, paired, and tool-restricted.
+- [Gateway exposure runbook](https://docs.openclaw.ai/gateway/security/exposure-runbook) - Pre-flight and rollback checklist before exposing the Gateway beyond loopback.
+- [Network exposure](https://docs.openclaw.ai/gateway/security/network-exposure) - Bind, firewall, discovery, Gateway auth, Tailscale, reverse proxy, dangerous flags.
+```
+
+```markdown
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Bind, port, firewall](https://docs.openclaw.ai/gateway/security/network-exposure#bind-port-firewall)
+```
+
+---
+
+## 3. Authentication 相关原文（逐字）
+
+页面没有提供具体认证配置值、token 格式或 header 配置；逐字出现的认证相关表述如下：
+
+```markdown
+container images default to an exposed bind (pair that with auth - see the [exposure runbook](https://docs.openclaw.ai/gateway/security/exposure-runbook))
+```
+
+```markdown
+- [Network exposure](https://docs.openclaw.ai/gateway/security/network-exposure) - Bind, firewall, discovery, Gateway auth, Tailscale, reverse proxy, dangerous flags.
+- [Trusted proxy auth](https://docs.openclaw.ai/gateway/trusted-proxy-auth) - Running the Gateway behind a reverse proxy that supplies the operator identity.
+```
+
+网络暴露章节中的认证/身份相关锚点：
+
+```markdown
+- [](https://docs.openclaw.ai/gateway/security)[Gateway WebSocket auth](https://docs.openclaw.ai/gateway/security/network-exposure#gateway-websocket-auth)
+- [](https://docs.openclaw.ai/gateway/security)[Tailscale Serve identity headers](https://docs.openclaw.ai/gateway/security/network-exposure#tailscale-serve-identity-headers)
+- [](https://docs.openclaw.ai/gateway/security)[Reverse proxy configuration](https://docs.openclaw.ai/gateway/security/network-exposure#reverse-proxy-configuration)
+- [](https://docs.openclaw.ai/gateway/security)[HSTS and origin notes](https://docs.openclaw.ai/gateway/security/network-exposure#hsts-and-origin-notes)
+- [](https://docs.openclaw.ai/gateway/security)[Control UI over HTTP](https://docs.openclaw.ai/gateway/security/network-exposure#control-ui-over-http)
+```
+
+---
+
+## 4. Pairing 与访问控制（逐字）
+
+```markdown
+most chat channels answer an unknown DM sender with a pairing code instead of processing the message; and group access is allowlisted, usually behind a mention gate.
+```
+
+```markdown
+- [Hardened baselines](https://docs.openclaw.ai/gateway/security/hardened-baseline) - Copy/paste configs that keep the Gateway local, paired, and tool-restricted.
+- [Access control and allowlists](https://docs.openclaw.ai/gateway/security/access-control) - DM policy, allowlists, DM session isolation, context visibility, command authorization.
+```
+
+访问控制章节中的 pairing/allowlist 相关锚点：
+
+```markdown
+[**Access control and allowlists**](https://docs.openclaw.ai/gateway/security/access-control)
+
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[DM access: pairing, allowlist, open, disabled](https://docs.openclaw.ai/gateway/security/access-control#dm-access-pairing-allowlist-open-disabled)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Allowlists (two layers)](https://docs.openclaw.ai/gateway/security/access-control#allowlists-two-layers)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[DM session isolation (multi-user mode)](https://docs.openclaw.ai/gateway/security/access-control#dm-session-isolation-multi-user-mode)
+```
+
+---
+
+## 5. Sandbox options 与工具权限选项（逐字）
+
+页面没有展开 sandbox 的具体配置值；逐字出现的 sandbox/权限模式标题如下：
+
+```markdown
+- [Tool and agent permissions](https://docs.openclaw.ai/gateway/security/tool-permissions) - Control-plane tools, node execution, plugins, sandboxing, per-agent profiles.
+```
+
+```markdown
+[**Tool and agent permissions**](https://docs.openclaw.ai/gateway/security/tool-permissions)
+
+- [](https://docs.openclaw.ai/gateway/security)[Control plane tools](https://docs.openclaw.ai/gateway/security/tool-permissions#control-plane-tools)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Node execution (`system.run`)](https://docs.openclaw.ai/gateway/security/tool-permissions#node-execution-system-run)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Dynamic skills (watcher / remote nodes)](https://docs.openclaw.ai/gateway/security/tool-permissions#dynamic-skills-watcher-/-remote-nodes)
+- [](https://docs.openclaw.ai/gateway/security)[Plugins](https://docs.openclaw.ai/gateway/security/tool-permissions#plugins)
+- [](https://docs.openclaw.ai/gateway/security)[Sandboxing](https://docs.openclaw.ai/gateway/security/tool-permissions#sandboxing)
+- [](https://docs.openclaw.ai/gateway/security)[Sub-agent delegation guardrail](https://docs.openclaw.ai/gateway/security/tool-permissions#sub-agent-delegation-guardrail)
+- [](https://docs.openclaw.ai/gateway/security)[Read-only mode](https://docs.openclaw.ai/gateway/security/tool-permissions#read-only-mode)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Per-agent access profiles (multi-agent)](https://docs.openclaw.ai/gateway/security/tool-permissions#per-agent-access-profiles-multi-agent)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Full access (no sandbox)](https://docs.openclaw.ai/gateway/security/tool-permissions#full-access-no-sandbox)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[Read-only tools + read-only workspace](https://docs.openclaw.ai/gateway/security/tool-permissions#read-only-tools-+-read-only-workspace)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[No filesystem/shell access (provider messaging allowed)](https://docs.openclaw.ai/gateway/security/tool-permissions#no-filesystem/shell-access-provider-messaging-allowed)
+```
+
+---
+
+## 6. Tool approval / 授权 / 策略（逐字）
+
+**说明**：页面中没有逐字出现 **“tool approval”**，也没有给出具体审批提示、审批命令或 approval 配置项。最接近的原文是 **“command authorization”**、**“tool policy”**、**“tool-restricted”**、**“message-tool access”** 与 **“cross-provider messaging restrictions”**。
+
+```markdown
+Agents with message-tool access can send across conversations and channel providers by default. If your deployment needs messaging confined to the current provider or conversation, configure [cross-provider messaging restrictions](https://docs.openclaw.ai/gateway/security/tool-permissions#cross-provider-messaging).
+```
+
+```markdown
+- [Hardened baselines](https://docs.openclaw.ai/gateway/security/hardened-baseline) - Copy/paste configs that keep the Gateway local, paired, and tool-restricted.
+- [Access control and allowlists](https://docs.openclaw.ai/gateway/security/access-control) - DM policy, allowlists, DM session isolation, context visibility, command authorization.
+```
+
+```markdown
+- [](https://docs.openclaw.ai/gateway/security)[Context visibility vs trigger authorization](https://docs.openclaw.ai/gateway/security/access-control#context-visibility-vs-trigger-authorization)
+- [](https://docs.openclaw.ai/gateway/security)[Command authorization](https://docs.openclaw.ai/gateway/security/access-control#command-authorization)
+```
+
+```markdown
+Run it from the CLI:
+
+- [`openclaw security`](https://docs.openclaw.ai/cli/security) - Run the audit, read findings, and apply the supported auto-fixes.
+- [`openclaw policy`](https://docs.openclaw.ai/cli/policy) - Inspect and test the tool policy the guidance above configures.
+```
+
+---
+
+## 7. 安全审计的精确命令（逐字）
+
+页面明确说 **“one command tells you if you have drifted”**，给出的精确审计命令是：
+
+````markdown
+bashCopy code
+
+```bash
+openclaw security audit
+```
+````
+
+相关审计说明与 CLI 条目原文：
+
+```markdown
+Run on those defaults and you are in good shape, and one command tells you if you have drifted:
+```
+
+```markdown
+- [Running the security audit](https://docs.openclaw.ai/gateway/security/running-the-audit) - What `openclaw security audit` checks and the order to fix findings in.
+- [Security audit checks](https://docs.openclaw.ai/gateway/security/audit-checks) - Reference catalog of every `checkId`, its severity, and its auto-fix support.
+```
+
+```markdown
+[**Running the security audit**](https://docs.openclaw.ai/gateway/security/running-the-audit)
+
+- [](https://docs.openclaw.ai/gateway/security)[`openclaw security audit`](https://docs.openclaw.ai/gateway/security/running-the-audit#openclaw-security-audit)
+- [](https://docs.openclaw.ai/gateway/security)[](https://docs.openclaw.ai/gateway/security)[What the audit checks (high level)](https://docs.openclaw.ai/gateway/security/running-the-audit#what-the-audit-checks-high-level)
+- [](https://docs.openclaw.ai/gateway/security)[Priority order when triaging findings](https://docs.openclaw.ai/gateway/security/running-the-audit#priority-order-when-triaging-findings)
+```
+
+```markdown
+Run it from the CLI:
+
+- [`openclaw security`](https://docs.openclaw.ai/cli/security) - Run the audit, read findings, and apply the supported auto-fixes.
+- [`openclaw policy`](https://docs.openclaw.ai/cli/policy) - Inspect and test the tool policy the guidance above configures.
+```
+
+**命令层面的结论**：审计专用精确命令只有 **`openclaw security audit`**；页面还列出 CLI 条目 **`openclaw security`**（运行审计、读取 findings、应用支持的 auto-fixes）和 **`openclaw policy`**（检查/测试 tool policy），但未给出另一个带参数的审计命令或 auto-fix 具体命令。
+
+---
+
+## 页面未逐字提供的信息
+
+- 未给出默认绑定的具体 IP/地址，只写 **“loopback”** 与 **“exposed bind”**。
+- 未给出 authentication 的具体配置文件、token、密码、header 或启用命令。
+- 未给出 sandbox 的具体配置片段；只列出 **“Sandboxing”**、**“Read-only mode”**、**“Full access (no sandbox)”** 等条目。
+- 未逐字出现 **“tool approval”**，也未提供具体 approval 规则、审批流程或审批命令。
+- 未提供除 **`openclaw security audit`** 之外的审计命令变体，也未提供 auto-fix 的具体调用命令。
+
+
+===== https://huggingface.co/Qwen/Qwen3-8B =====
+PROMPT: Extract the exact license name shown in the model card metadata, the model size, context length, supported inference frameworks and quantization, tool calling / function calling support, and any stated usage restrictions. Quote the license line verbatim.
+# Web Content Analysis
+
+## Request
+Extract the exact license name shown in the model card metadata, the model size, context length, supported inference frameworks and quantization, tool calling / function calling support, and any stated usage restrictions. Quote the license line verbatim.
+
+## Content Summary
+- **Source**: Fetched web content
+- **Length**: 18118 characters
+- **Content Preview**: **标题**: Qwen/Qwen3-8B · Hugging Face
+
+# [](https://huggingface.co/Qwen/Qwen3-8B#qwen3-8b)Qwen3-8B
+
+[](https://chat.qwen.ai/)
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#qwen3-highlights)Qwen3 Highligh...
+
+## Analysis
+Based on the prompt "Extract the exact license name shown in the model card metadata, the model size, context length, supported inference frameworks and quantization, tool calling / function calling support, and any stated usage restrictions. Quote the license line verbatim.", here is the relevant information extracted from the web content:
+
+**Main headings found:**
+- # [](https://huggingface.co/Qwen/Qwen3-8B#qwen3-8b)Qwen3-8B
+- ## [](https://huggingface.co/Qwen/Qwen3-8B#qwen3-highlights)Qwen3 Highlights
+- ## [](https://huggingface.co/Qwen/Qwen3-8B#model-overview)Model Overview
+- ## [](https://huggingface.co/Qwen/Qwen3-8B#quickstart)Quickstart
+- # load the tokenizer and the model
+
+**First substantial paragraph:**
+Qwen3 is the latest generation of large language models in Qwen series, offering a comprehensive suite of dense and mixture-of-experts (MoE) models. Built upon extensive training, Qwen3 delivers groundbreaking advancements in reasoning, instruction-following, agent capabilities, and multilingual support, with the following key features:
+
+**Content structure:** 283 lines of text
+
+## Full Content
+```
+**标题**: Qwen/Qwen3-8B · Hugging Face
+
+# [](https://huggingface.co/Qwen/Qwen3-8B#qwen3-8b)Qwen3-8B
+
+[](https://chat.qwen.ai/)
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#qwen3-highlights)Qwen3 Highlights
+
+Qwen3 is the latest generation of large language models in Qwen series, offering a comprehensive suite of dense and mixture-of-experts (MoE) models. Built upon extensive training, Qwen3 delivers groundbreaking advancements in reasoning, instruction-following, agent capabilities, and multilingual support, with the following key features:
+
+- **Uniquely support of seamless switching between thinking mode** (for complex logical reasoning, math, and coding) and **non-thinking mode** (for efficient, general-purpose dialogue) **within single model**, ensuring optimal performance across various scenarios.
+- **Significantly enhancement in its reasoning capabilities**, surpassing previous QwQ (in thinking mode) and Qwen2.5 instruct models (in non-thinking mode) on mathematics, code generation, and commonsense logical reasoning.
+- **Superior human preference alignment**, excelling in creative writing, role-playing, multi-turn dialogues, and instruction following, to deliver a more natural, engaging, and immersive conversational experience.
+- **Expertise in agent capabilities**, enabling precise integration with external tools in both thinking and unthinking modes and achieving leading performance among open-source models in complex agent-based tasks.
+- **Support of 100+ languages and dialects** with strong capabilities for **multilingual instruction following** and **translation**.
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#model-overview)Model Overview
+
+**Qwen3-8B** has the following features:
+
+- Type: Causal Language Models
+- Training Stage: Pretraining & Post-training
+- Number of Parameters: 8.2B
+- Number of Paramaters (Non-Embedding): 6.95B
+- Number of Layers: 36
+- Number of Attention Heads (GQA): 32 for Q and 8 for KV
+- Context Length: 32,768 natively and [131,072 tokens with YaRN](https://huggingface.co/Qwen/Qwen3-8B#processing-long-texts).
+
+For more details, including benchmark evaluation, hardware requirements, and inference performance, please refer to our [blog](https://qwenlm.github.io/blog/qwen3/), [GitHub](https://github.com/QwenLM/Qwen3), and [Documentation](https://qwen.readthedocs.io/en/latest/).
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#quickstart)Quickstart
+
+The code of Qwen3 has been in the latest Hugging Face `transformers` and we advise you to use the latest version of `transformers`.
+
+With `transformers<4.51.0`, you will encounter the following error:
+
+```
+KeyError: 'qwen3'
+```
+
+The following contains a code snippet illustrating how to use the model generate content based on given inputs.
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen3-8B"
+
+# load the tokenizer and the model
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map="auto"
+)
+
+# prepare the model input
+prompt = "Give me a short introduction to large language model."
+messages = [
+    {"role": "user", "content": prompt}
+]
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+    enable_thinking=True # Switches between thinking and non-thinking modes. Default is True.
+)
+model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+
+# conduct text completion
+generated_ids = model.generate(
+    **model_inputs,
+    max_new_tokens=32768
+)
+output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist() 
+
+# parsing thinking content
+try:
+    # rindex finding 151668 (</think>)
+    index = len(output_ids) - output_ids[::-1].index(151668)
+except ValueError:
+    index = 0
+
+thinking_content = tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip("\n")
+content = tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip("\n")
+
+print("thinking content:", thinking_content)
+print("content:", content)
+```
+
+For deployment, you can use `sglang>=0.4.6.post1` or `vllm>=0.8.5` or to create an OpenAI-compatible API endpoint:
+
+- SGLang:
+  
+  ```shell
+  python -m sglang.launch_server --model-path Qwen/Qwen3-8B --reasoning-parser qwen3
+  ```
+- vLLM:
+  
+  ```shell
+  vllm serve Qwen/Qwen3-8B --enable-reasoning --reasoning-parser deepseek_r1
+  ```
+
+For local use, applications such as Ollama, LMStudio, MLX-LM, llama.cpp, and KTransformers have also supported Qwen3.
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#switching-between-thinking-and-non-thinking-mode)Switching Between Thinking and Non-Thinking Mode
+
+> The `enable_thinking` switch is also available in APIs created by SGLang and vLLM. Please refer to our documentation for [SGLang](https://qwen.readthedocs.io/en/latest/deployment/sglang.html#thinking-non-thinking-modes) and [vLLM](https://qwen.readthedocs.io/en/latest/deployment/vllm.html#thinking-non-thinking-modes) users.
+
+### [](https://huggingface.co/Qwen/Qwen3-8B#enable_thinkingtrue)`enable_thinking=True`
+
+By default, Qwen3 has thinking capabilities enabled, similar to QwQ-32B. This means the model will use its reasoning abilities to enhance the quality of generated responses. For example, when explicitly setting `enable_thinking=True` or leaving it as the default value in `tokenizer.apply_chat_template`, the model will engage its thinking mode.
+
+```python
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+    enable_thinking=True  # True is the default value for enable_thinking
+)
+```
+
+In this mode, the model will generate think content wrapped in a `<think>...</think>` block, followed by the final response.
+
+> For thinking mode, use `Temperature=0.6`, `TopP=0.95`, `TopK=20`, and `MinP=0` (the default setting in `generation_config.json`). **DO NOT use greedy decoding**, as it can lead to performance degradation and endless repetitions. For more detailed guidance, please refer to the [Best Practices](https://huggingface.co/Qwen/Qwen3-8B#best-practices) section.
+
+### [](https://huggingface.co/Qwen/Qwen3-8B#enable_thinkingfalse)`enable_thinking=False`
+
+We provide a hard switch to strictly disable the model's thinking behavior, aligning its functionality with the previous Qwen2.5-Instruct models. This mode is particularly useful in scenarios where disabling thinking is essential for enhancing efficiency.
+
+```python
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+    enable_thinking=False  # Setting enable_thinking=False disables thinking mode
+)
+```
+
+In this mode, the model will not generate any think content and will not include a `<think>...</think>` block.
+
+> For non-thinking mode, we suggest using `Temperature=0.7`, `TopP=0.8`, `TopK=20`, and `MinP=0`. For more detailed guidance, please refer to the [Best Practices](https://huggingface.co/Qwen/Qwen3-8B#best-practices) section.
+
+### [](https://huggingface.co/Qwen/Qwen3-8B#advanced-usage-switching-between-thinking-and-non-thinking-modes-via-user-input)Advanced Usage: Switching Between Thinking and Non-Thinking Modes via User Input
+
+We provide a soft switch mechanism that allows users to dynamically control the model's behavior when `enable_thinking=True`. Specifically, you can add `/think` and `/no_think` to user prompts or system messages to switch the model's thinking mode from turn to turn. The model will follow the most recent instruction in multi-turn conversations.
+
+Here is an example of a multi-turn conversation:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+class QwenChatbot:
+    def __init__(self, model_name="Qwen/Qwen3-8B"):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name)
+        self.history = []
+
+    def generate_response(self, user_input):
+        messages = self.history + [{"role": "user", "content": user_input}]
+
+        text = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+
+        inputs = self.tokenizer(text, return_tensors="pt")
+        response_ids = self.model.generate(**inputs, max_new_tokens=32768)[0][len(inputs.input_ids[0]):].tolist()
+        response = self.tokenizer.decode(response_ids, skip_special_tokens=True)
+
+        # Update history
+        self.history.append({"role": "user", "content": user_input})
+        self.history.append({"role": "assistant", "content": response})
+
+        return response
+
+# Example Usage
+if __name__ == "__main__":
+    chatbot = QwenChatbot()
+
+    # First input (without /think or /no_think tags, thinking mode is enabled by default)
+    user_input_1 = "How many r's in strawberries?"
+    print(f"User: {user_input_1}")
+    response_1 = chatbot.generate_response(user_input_1)
+    print(f"Bot: {response_1}")
+    print("----------------------")
+
+    # Second input with /no_think
+    user_input_2 = "Then, how many r's in blueberries? /no_think"
+    print(f"User: {user_input_2}")
+    response_2 = chatbot.generate_response(user_input_2)
+    print(f"Bot: {response_2}") 
+    print("----------------------")
+
+    # Third input with /think
+    user_input_3 = "Really? /think"
+    print(f"User: {user_input_3}")
+    response_3 = chatbot.generate_response(user_input_3)
+    print(f"Bot: {response_3}")
+```
+
+> For API compatibility, when `enable_thinking=True`, regardless of whether the user uses `/think` or `/no_think`, the model will always output a block wrapped in `<think>...</think>`. However, the content inside this block may be empty if thinking is disabled. When `enable_thinking=False`, the soft switches are not valid. Regardless of any `/think` or `/no_think` tags input by the user, the model will not generate think content and will not include a `<think>...</think>` block.
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#agentic-use)Agentic Use
+
+Qwen3 excels in tool calling capabilities. We recommend using [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent) to make the best use of agentic ability of Qwen3. Qwen-Agent encapsulates tool-calling templates and tool-calling parsers internally, greatly reducing coding complexity.
+
+To define the available tools, you can use the MCP configuration file, use the integrated tool of Qwen-Agent, or integrate other tools by yourself.
+
+```python
+from qwen_agent.agents import Assistant
+
+# Define LLM
+llm_cfg = {
+    'model': 'Qwen3-8B',
+
+    # Use the endpoint provided by Alibaba Model Studio:
+    # 'model_type': 'qwen_dashscope',
+    # 'api_key': os.getenv('DASHSCOPE_API_KEY'),
+
+    # Use a custom endpoint compatible with OpenAI API:
+    'model_server': 'http://localhost:8000/v1',  # api_base
+    'api_key': 'EMPTY',
+
+    # Other parameters:
+    # 'generate_cfg': {
+    #         # Add: When the response content is `<think>this is the thought</think>this is the answer;
+    #         # Do not add: When the response has been separated by reasoning_content and content.
+    #         'thought_in_content': True,
+    #     },
+}
+
+# Define Tools
+tools = [
+    {'mcpServers': {  # You can specify the MCP configuration file
+            'time': {
+                'command': 'uvx',
+                'args': ['mcp-server-time', '--local-timezone=Asia/Shanghai']
+            },
+            "fetch": {
+                "command": "uvx",
+                "args": ["mcp-server-fetch"]
+            }
+        }
+    },
+  'code_interpreter',  # Built-in tools
+]
+
+# Define Agent
+bot = Assistant(llm=llm_cfg, function_list=tools)
+
+# Streaming generation
+messages = [{'role': 'user', 'content': 'https://qwenlm.github.io/blog/ Introduce the latest developments of Qwen'}]
+for responses in bot.run(messages=messages):
+    pass
+print(responses)
+```
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#processing-long-texts)Processing Long Texts
+
+Qwen3 natively supports context lengths of up to 32,768 tokens. For conversations where the total length (including both input and output) significantly exceeds this limit, we recommend using RoPE scaling techniques to handle long texts effectively. We have validated the model's performance on context lengths of up to 131,072 tokens using the [YaRN](https://arxiv.org/abs/2309.00071) method.
+
+YaRN is currently supported by several inference frameworks, e.g., `transformers` and `llama.cpp` for local use, `vllm` and `sglang` for deployment. In general, there are two approaches to enabling YaRN for supported frameworks:
+
+- Modifying the model files: In the `config.json` file, add the `rope_scaling` fields:
+  
+  ```json
+  {
+      ...,
+      "rope_scaling": {
+          "rope_type": "yarn",
+          "factor": 4.0,
+          "original_max_position_embeddings": 32768
+      }
+  }
+  ```
+  
+  For `llama.cpp`, you need to regenerate the GGUF file after the modification.
+- Passing command line arguments:
+  
+  For `vllm`, you can use
+  
+  ```shell
+  vllm serve ... --rope-scaling '{"rope_type":"yarn","factor":4.0,"original_max_position_embeddings":32768}' --max-model-len 131072  
+  ```
+  
+  For `sglang`, you can use
+  
+  ```shell
+  python -m sglang.launch_server ... --json-model-override-args '{"rope_scaling":{"rope_type":"yarn","factor":4.0,"original_max_position_embeddings":32768}}'
+  ```
+  
+  For `llama-server` from `llama.cpp`, you can use
+  
+  ```shell
+  llama-server ... --rope-scaling yarn --rope-scale 4 --yarn-orig-ctx 32768
+  ```
+
+> If you encounter the following warning
+> 
+> ```
+> Unrecognized keys in `rope_scaling` for 'rope_type'='yarn': {'original_max_position_embeddings'}
+> ```
+> 
+> please upgrade `transformers>=4.51.0`.
+
+> All the notable open-source frameworks implement static YaRN, which means the scaling factor remains constant regardless of input length, **potentially impacting performance on shorter texts.** We advise adding the `rope_scaling` configuration only when processing long contexts is required. It is also recommended to modify the `factor` as needed. For example, if the typical context length for your application is 65,536 tokens, it would be better to set `factor` as 2.0.
+
+> The default `max_position_embeddings` in `config.json` is set to 40,960. This allocation includes reserving 32,768 tokens for outputs and 8,192 tokens for typical prompts, which is sufficient for most scenarios involving short text processing. If the average context length does not exceed 32,768 tokens, we do not recommend enabling YaRN in this scenario, as it may potentially degrade model performance.
+
+> The endpoint provided by Alibaba Model Studio supports dynamic YaRN by default and no extra configuration is needed.
+
+## [](https://huggingface.co/Qwen/Qwen3-8B#best-practices)Best Practices
+
+To achieve optimal performance, we recommend the following settings:
+
+1. **Sampling Parameters**:
+   
+   - For thinking mode (`enable_thinking=True`), use `Temperature=0.6`, `TopP=0.95`, `TopK=20`, and `MinP=0`. **DO NOT use greedy decoding**, as it can lead to performance degradation and endless repetitions.
+   - For non-thinking mode (`enable_thinking=False`), we suggest using `Temperature=0.7`, `TopP=0.8`, `TopK=20`, and `MinP=0`.
+   - For supported frameworks, you can adjust the `presence_penalty` parameter between 0 and 2 to reduce endless repetitions. However, using a higher value may occasionally result in language mixing and a slight decrease in model performance.
+2. **Adequate Output Length**: We recommend using an output length of 32,768 tokens for most queries. For benchmarking on highly complex problems, such as those found in math and programming competitions, we suggest setting the max output length to 38,912 tokens. This provides the model with sufficient space to generate detailed and comprehensive responses, thereby enhancing its overall performance.
+3. **Standardize Output Format**: We recommend using prompts to standardize model outputs when benchmarking.
+   
+   - **Math Problems**: Include "Please reason step by step, and put your final answer within \boxed{}." in the prompt.
+   - **Multiple-Choice Questions**: Add the following JSON structure to the prompt to standardize responses: "Please show your choice in the `answer` field with only the choice letter, e.g., `"answer": "C"`."
+4. **No Thinking Content in History**: In multi-turn conversations, the historical model output should only include the final output part and does not need to include the thinking content. It is implemented in the provided chat template in Jinja2. However, for frameworks that do not directly use the Jinja2 chat template, it is up to the developers to ensure that the best practice is followed.
+
+### [](https://huggingface.co/Qwen/Qwen3-8B#citation)Citation
+
+If you find our work helpful, feel free to give us a cite.
+
+```
+@misc{qwen3technicalreport,
+      title={Qwen3 Technical Report}, 
+      author={Qwen Team},
+      year={2025},
+      eprint={2505.09388},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2505.09388}, 
+}
+```
+
+7,000,357
+
+Model size
+
+8B params
+
+Tensor type
+
+BF16
+
+·
+
+Chat template
+
+Files info
+
+Inference Providers [NEW](https://huggingface.co/docs/inference-providers)
+
+Featherless AI
+
+[Text Generation](https://huggingface.co/tasks/text-generation "Learn more about text-generation")
+
+Examples
+
+Input a message to start chatting with **Qwen/Qwen3-8B**.
+
+Send
+
+View Code Snippets
+
+[Compare providers](https://huggingface.co/inference/models?model=Qwen%2FQwen3-8B)
+
+Base model
+
+[Qwen/Qwen3-8B-Base](https://huggingface.co/Qwen/Qwen3-8B-Base)
+
+Finetuned
+
+([667](https://huggingface.co/models?other=base_model%3Afinetune%3AQwen%2FQwen3-8B-Base))
+
+this model
+
+Adapters
+
+[2,442 models](https://huggingface.co/models?other=base_model%3Aadapter%3AQwen%2FQwen3-8B)
+
+Finetunes
+
+[2,301 models](https://huggingface.co/models?other=base_model%3Afinetune%3AQwen%2FQwen3-8B)
+
+Merges
+
+[38 models](https://huggingface.co/models?other=base_model%3Amerge%3AQwen%2FQwen3-8B)
+
+Quantizations
+
+[492 models](https://huggingface.co/models?other=base_model%3Aquantized%3AQwen%2FQwen3-8B)
+```
+
+*Note: This analysis was generated using a fallback summary method. For more sophisticated AI-powered analysis, please ensure the agent service is properly configured.*
+
+
+===== https://huggingface.co/openai/gpt-oss-20b =====
+PROMPT: Extract verbatim: the license field, model size, context length, quantization format, minimum hardware requirements, recommended inference frameworks, harmony format notes, and the usage policy link. Also state whether tool calling / function calling is supported.
+**标题**: openai/gpt-oss-20b · Hugging Face
+
+# [![](https://cdn-avatars.huggingface.co/v1/production/uploads/68783facef79a05727260de3/UPX5RQxiPGA-ZbBmArIKq.png)](https://huggingface.co/openai) [openai](https://huggingface.co/openai) / [gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b)
+
+Copy to bucket
+
+Use this model
+
+### Instructions to use openai/gpt-oss-20b with libraries, inference providers, notebooks, and local apps. Follow these links to get started.
+
+- Libraries
+- [Transformers](https://huggingface.co/openai/gpt-oss-20b?library=transformers)
+  
+  How to use openai/gpt-oss-20b with Transformers:
+  
+  ```
+  # Use a pipeline as a high-level helper
+  from transformers import pipeline
+  
+  pipe = pipeline("text-generation", model="openai/gpt-oss-20b")
+  messages = [
+      {"role": "user", "content": "Who are you?"},
+  ]
+  pipe(messages)
+  ```
+  
+  ```
+  # pip install -U transformers accelerate
+  # Load model directly
+  from transformers import AutoTokenizer, AutoModelForCausalLM
+  
+  tokenizer = AutoTokenizer.from_pretrained("openai/gpt-oss-20b")
+  model = AutoModelForCausalLM.from_pretrained("openai/gpt-oss-20b", device_map="auto")
+  messages = [
+      {"role": "user", "content": "Who are you?"},
+  ]
+  inputs = tokenizer.apply_chat_template(
+  	messages,
+  	add_generation_prompt=True,
+  	tokenize=True,
+  	return_dict=True,
+  	return_tensors="pt",
+  ).to(model.device)
+  
+  outputs = model.generate(**inputs, max_new_tokens=256)
+  print(tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:]))
+  ```
+- Inference
+- Inference Providers
+- [vLLM](https://huggingface.co/openai/gpt-oss-20b?local-app=vllm)
+  
+  How to use openai/gpt-oss-20b with vLLM:
+  
+  ```
+  docker model run hf.co/openai/gpt-oss-20b
+  ```
+
+<!--THE END-->
+
+- [Highlights](https://huggingface.co/openai/gpt-oss-20b#highlights "Highlights")
+- [Inference examples](https://huggingface.co/openai/gpt-oss-20b#inference-examples "Inference examples")
+  
+  - [Transformers](https://huggingface.co/openai/gpt-oss-20b#transformers "Transformers")
+  - [vLLM](https://huggingface.co/openai/gpt-oss-20b#vllm "vLLM")
+  - [PyTorch / Triton](https://huggingface.co/openai/gpt-oss-20b#pytorch--triton "PyTorch / Triton")
+  - [Ollama](https://huggingface.co/openai/gpt-oss-20b#ollama "Ollama")
+- [Download the model](https://huggingface.co/openai/gpt-oss-20b#download-the-model "Download the model")
+- [Reasoning levels](https://huggingface.co/openai/gpt-oss-20b#reasoning-levels "Reasoning levels")
+- [Fine-tuning](https://huggingface.co/openai/gpt-oss-20b#fine-tuning "Fine-tuning")
+
+![gpt-oss-20b](https://raw.githubusercontent.com/openai/gpt-oss/main/docs/gpt-oss-20b.svg)
+
+[**Try gpt-oss**](https://gpt-oss.com) · [**Guides**](https://cookbook.openai.com/topic/gpt-oss) · [**Model card**](https://arxiv.org/abs/2508.10925) · [**OpenAI blog**](https://openai.com/index/introducing-gpt-oss/)
+
+Welcome to the gpt-oss series, [OpenAI’s open-weight models](https://openai.com/open-models) designed for powerful reasoning, agentic tasks, and versatile developer use cases.
+
+We’re releasing two flavors of these open models:
+
+- `gpt-oss-120b` — for production, general purpose, high reasoning use cases that fit into a single 80GB GPU (like NVIDIA H100 or AMD MI300X) (117B parameters with 5.1B active parameters)
+- `gpt-oss-20b` — for lower latency, and local or specialized use cases (21B parameters with 3.6B active parameters)
+
+Both models were trained on our [harmony response format](https://github.com/openai/harmony) and should only be used with the harmony format as it will not work correctly otherwise.
+
+> This model card is dedicated to the smaller `gpt-oss-20b` model. Check out [`gpt-oss-120b`](https://huggingface.co/openai/gpt-oss-120b) for the larger model.
+
+# [](https://huggingface.co/openai/gpt-oss-20b#highlights)Highlights
+
+- **Permissive Apache 2.0 license:** Build freely without copyleft restrictions or patent risk—ideal for experimentation, customization, and commercial deployment.
+- **Configurable reasoning effort:** Easily adjust the reasoning effort (low, medium, high) based on your specific use case and latency needs.
+- **Full chain-of-thought:** Gain complete access to the model’s reasoning process, facilitating easier debugging and increased trust in outputs. It’s not intended to be shown to end users.
+- **Fine-tunable:** Fully customize models to your specific use case through parameter fine-tuning.
+- **Agentic capabilities:** Use the models’ native capabilities for function calling, [web browsing](https://github.com/openai/gpt-oss/tree/main?tab=readme-ov-file#browser), [Python code execution](https://github.com/openai/gpt-oss/tree/main?tab=readme-ov-file#python), and Structured Outputs.
+- **MXFP4 quantization:** The models were post-trained with MXFP4 quantization of the MoE weights, making `gpt-oss-120b` run on a single 80GB GPU (like NVIDIA H100 or AMD MI300X) and the `gpt-oss-20b` model run within 16GB of memory. All evals were performed with the same MXFP4 quantization.
+
+* * *
+
+# [](https://huggingface.co/openai/gpt-oss-20b#inference-examples)Inference examples
+
+## [](https://huggingface.co/openai/gpt-oss-20b#transformers)Transformers
+
+You can use `gpt-oss-120b` and `gpt-oss-20b` with Transformers. If you use the Transformers chat template, it will automatically apply the [harmony response format](https://github.com/openai/harmony). If you use `model.generate` directly, you need to apply the harmony format manually using the chat template or use our [openai-harmony](https://github.com/openai/harmony) package.
+
+To get started, install the necessary dependencies to setup your environment:
+
+```
+pip install -U transformers kernels torch 
+```
+
+Once, setup you can proceed to run the model by running the snippet below:
+
+```py
+from transformers import pipeline
+import torch
+
+model_id = "openai/gpt-oss-20b"
+
+pipe = pipeline(
+    "text-generation",
+    model=model_id,
+    torch_dtype="auto",
+    device_map="auto",
+)
+
+messages = [
+    {"role": "user", "content": "Explain quantum mechanics clearly and concisely."},
+]
+
+outputs = pipe(
+    messages,
+    max_new_tokens=256,
+)
+print(outputs[0]["generated_text"][-1])
+```
+
+Alternatively, you can run the model via [`Transformers Serve`](https://huggingface.co/docs/transformers/main/serving) to spin up a OpenAI-compatible webserver:
+
+```
+transformers serve
+transformers chat localhost:8000 --model-name-or-path openai/gpt-oss-20b
+```
+
+[Learn more about how to use gpt-oss with Transformers.](https://cookbook.openai.com/articles/gpt-oss/run-transformers)
+
+## [](https://huggingface.co/openai/gpt-oss-20b#vllm)vLLM
+
+vLLM recommends using [uv](https://docs.astral.sh/uv/) for Python dependency management. You can use vLLM to spin up an OpenAI-compatible webserver. The following command will automatically download the model and start the server.
+
+```bash
+uv pip install --pre vllm==0.10.1+gptoss \
+    --extra-index-url https://wheels.vllm.ai/gpt-oss/ \
+    --extra-index-url https://download.pytorch.org/whl/nightly/cu128 \
+    --index-strategy unsafe-best-match
+
+vllm serve openai/gpt-oss-20b
+```
+
+[Learn more about how to use gpt-oss with vLLM.](https://cookbook.openai.com/articles/gpt-oss/run-vllm)
+
+## [](https://huggingface.co/openai/gpt-oss-20b#pytorch--triton)PyTorch / Triton
+
+To learn about how to use this model with PyTorch and Triton, check out our [reference implementations in the gpt-oss repository](https://github.com/openai/gpt-oss?tab=readme-ov-file#reference-pytorch-implementation).
+
+## [](https://huggingface.co/openai/gpt-oss-20b#ollama)Ollama
+
+If you are trying to run gpt-oss on consumer hardware, you can use Ollama by running the following commands after [installing Ollama](https://ollama.com/download).
+
+```bash
+# gpt-oss-20b
+ollama pull gpt-oss:20b
+ollama run gpt-oss:20b
+```
+
+[Learn more about how to use gpt-oss with Ollama.](https://cookbook.openai.com/articles/gpt-oss/run-locally-ollama)
+
+#### [](https://huggingface.co/openai/gpt-oss-20b#lm-studio)LM Studio
+
+If you are using [LM Studio](https://lmstudio.ai/) you can use the following commands to download.
+
+```bash
+lms get openai/gpt-oss-20b
+```
+
+Check out our [awesome list](https://github.com/openai/gpt-oss/blob/main/awesome-gpt-oss.md) for a broader collection of gpt-oss resources and inference partners.
+
+* * *
+
+# [](https://huggingface.co/openai/gpt-oss-20b#download-the-model)Download the model
+
+You can download the model weights from the [Hugging Face Hub](https://huggingface.co/collections/openai/gpt-oss-68911959590a1634ba11c7a4) directly from Hugging Face CLI:
+
+```shell
+huggingface-cli download openai/gpt-oss-20b --include "original/*" --local-dir gpt-oss-20b/
+pip install gpt-oss
+python -m gpt_oss.chat model/
+```
+
+# [](https://huggingface.co/openai/gpt-oss-20b#reasoning-levels)Reasoning levels
+
+You can adjust the reasoning level that suits your task across three levels:
+
+- **Low:** Fast responses for general dialogue.
+- **Medium:** Balanced speed and detail.
+- **High:** Deep and detailed analysis.
+
+The reasoning level can be set in the system prompts, e.g., "Reasoning: high".
+
+# [](https://huggingface.co/openai/gpt-oss-20b#tool-use)Tool use
+
+The gpt-oss models are excellent for:
+
+- Web browsing (using built-in browsing tools)
+- Function calling with defined schemas
+- Agentic operations like browser tasks
+
+# [](https://huggingface.co/openai/gpt-oss-20b#fine-tuning)Fine-tuning
+
+Both gpt-oss models can be fine-tuned for a variety of specialized use cases.
+
+This smaller model `gpt-oss-20b` can be fine-tuned on consumer hardware, whereas the larger [`gpt-oss-120b`](https://huggingface.co/openai/gpt-oss-120b) can be fine-tuned on a single H100 node.
+
+# [](https://huggingface.co/openai/gpt-oss-20b#citation)Citation
+
+```bibtex
+@misc{openai2025gptoss120bgptoss20bmodel,
+      title={gpt-oss-120b & gpt-oss-20b Model Card}, 
+      author={OpenAI},
+      year={2025},
+      eprint={2508.10925},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2508.10925}, 
+}
+```
+
+Downloads last month
+
+5,928,593
+
+Safetensors[](https://huggingface.co/docs/safetensors)
+
+Model size
+
+21B params
+
+Tensor type
+
+BF16
+
+·
+
+U8
+
+·
+
+Chat template
+
+Files info
+
+Inference Providers [NEW](https://huggingface.co/docs/inference-providers)
+
+Groq
+
+- +2
+
+[Text Generation](https://huggingface.co/tasks/text-generation "Learn more about text-generation")
+
+Examples
+
+Input a message to start chatting with **openai/gpt-oss-20b**.
+
+Send
+
+View Code Snippets
+
+[Compare providers](https://huggingface.co/inference/models?model=openai%2Fgpt-oss-20b)
+
+Adapters
+
+[489 models](https://huggingface.co/models?other=base_model%3Aadapter%3Aopenai%2Fgpt-oss-20b)
+
+Finetunes
+
+[571 models](https://huggingface.co/models?other=base_model%3Afinetune%3Aopenai%2Fgpt-oss-20b)
+
+Merges
+
+[7 models](https://huggingface.co/models?other=base_model%3Amerge%3Aopenai%2Fgpt-oss-20b)
+
+Quantizations
+
+[](https://huggingface.co/models?apps=llama.cpp&other=base_model%3Aquantized%3Aopenai%2Fgpt-oss-20b "Use with llama.cpp")[](https://huggingface.co/models?apps=llama-app&other=base_model%3Aquantized%3Aopenai%2Fgpt-oss-20b "Use with Llama")[](https://huggingface.co/models?apps=lmstudio&other=base_model%3Aquantized%3Aopenai%2Fgpt-oss-20b "Use with LM Studio")[](https://huggingface.co/models?apps=jan&other=base_model%3Aquantized%3Aopenai%2Fgpt-oss-20b "Use with Jan")
+
+[260 models](https://huggingface.co/models?other=base_model%3Aquantized%3Aopenai%2Fgpt-oss-20b)
+
+[Collection  
+\
+Open-weight models designed for powerful reasoning, agentic tasks, and versatile developer use cases. • 2 items • Updated Aug 7, 2025 • 484](https://huggingface.co/collections/openai/gpt-oss)
+
+[Paper • 2508.10925 • Published Aug 8, 2025 • 32](https://huggingface.co/papers/2508.10925)
+
+- GPQA Diamond [View evaluation results](https://huggingface.co/openai/gpt-oss-20b/discussions/256) [source](https://huggingface.co/datasets/evaleval/EEE_datastore/blob/192329fb7d6b15b7b0936a1a58ae862aa7e8ba24/flat/objects/6f/c3/6fc3630c-36f0-4ba9-9f34-3c9f73dec76a.json)
+  
+  58.59 *
+- Reasoning: medium, With tools [View evaluation results](https://huggingface.co/openai/gpt-oss-20b/discussions/238) [source](https://arxiv.org/abs/2508.10925)
+  
+  67.1 *
+- Reasoning: medium [View evaluation results](https://huggingface.co/openai/gpt-oss-20b/discussions/237) [source](https://arxiv.org/abs/2508.10925)
+  
+  66 *
+- Reasoning: medium [View evaluation results](https://huggingface.co/openai/gpt-oss-20b/discussions/247) [source](https://arxiv.org/abs/2508.10925)
+  
+  53.2 *
+
+
+===== https://docs.ollama.com/gpu =====
+PROMPT: Extract the GPU/VRAM requirements, supported GPU vendors and compute capability, memory estimation rules, and any tables of model size vs VRAM. Include exact numbers.
+**标题**: Hardware support - Ollama
+
+[Skip to main content](https://docs.ollama.com/gpu#content-area)
+
+# Hardware support
+
+## [​](https://docs.ollama.com/gpu#nvidia) Nvidia
+
+Ollama supports Nvidia GPUs with compute capability 5.0+ and driver version 550 and newer. Nvidia GPUs with compute capability 5.0 through 6.2 require driver version 570 or newer. Check your compute compatibility to see if your card is supported: [https://developer.nvidia.com/cuda-gpus](https://developer.nvidia.com/cuda-gpus)
+
+Compute CapabilityFamilyCards12.1NVIDIA`GB10 (DGX Spark)`12.0GeForce RTX 50xx`RTX 5060` `RTX 5060 Ti` `RTX 5070` `RTX 5070 Ti` `RTX 5080` `RTX 5090`NVIDIA Professional`RTX PRO 4000 Blackwell` `RTX PRO 4500 Blackwell` `RTX PRO 5000 Blackwell` `RTX PRO 6000 Blackwell`9.0NVIDIA`H200` `H100`8.9GeForce RTX 40xx`RTX 4090` `RTX 4080 SUPER` `RTX 4080` `RTX 4070 Ti SUPER` `RTX 4070 Ti` `RTX 4070 SUPER` `RTX 4070` `RTX 4060 Ti` `RTX 4060`NVIDIA Professional`L4` `L40` `RTX 6000`8.6GeForce RTX 30xx`RTX 3090 Ti` `RTX 3090` `RTX 3080 Ti` `RTX 3080` `RTX 3070 Ti` `RTX 3070` `RTX 3060 Ti` `RTX 3060` `RTX 3050 Ti` `RTX 3050`NVIDIA Professional`A40` `RTX A6000` `RTX A5000` `RTX A4000` `RTX A3000` `RTX A2000` `A10` `A16` `A2`8.0NVIDIA`A100` `A30`7.5GeForce GTX/RTX`GTX 1650 Ti` `TITAN RTX` `RTX 2080 Ti` `RTX 2080` `RTX 2070` `RTX 2060`NVIDIA Professional`T4` `RTX 5000` `RTX 4000` `RTX 3000` `T2000` `T1200` `T1000` `T600` `T500`Quadro`RTX 8000` `RTX 6000` `RTX 5000` `RTX 4000`7.0NVIDIA`TITAN V` `V100` `Quadro GV100`6.1NVIDIA TITAN`TITAN Xp` `TITAN X`GeForce GTX`GTX 1080 Ti` `GTX 1080` `GTX 1070 Ti` `GTX 1070` `GTX 1060` `GTX 1050 Ti` `GTX 1050`Quadro`P6000` `P5200` `P4200` `P3200` `P5000` `P4000` `P3000` `P2200` `P2000` `P1000` `P620` `P600` `P500` `P520`Tesla`P40` `P4`6.0NVIDIA`Tesla P100` `Quadro GP100`5.2GeForce GTX`GTX TITAN X` `GTX 980 Ti` `GTX 980` `GTX 970` `GTX 960` `GTX 950`Quadro`M6000 24GB` `M6000` `M5000` `M5500M` `M4000` `M2200` `M2000` `M620`Tesla`M60` `M40`5.0GeForce GTX`GTX 750 Ti` `GTX 750` `NVS 810`Quadro`K2200` `K1200` `K620` `M1200` `M520` `M5000M` `M4000M` `M3000M` `M2000M` `M1000M` `K620M` `M600M` `M500M`
+
+For building locally to support older GPUs, see [development](https://docs.ollama.com/development).
+
+### [​](https://docs.ollama.com/gpu#gpu-selection) GPU Selection
+
+If you have multiple NVIDIA GPUs in your system and want to limit Ollama to use a subset, you can set `CUDA_VISIBLE_DEVICES` to a comma separated list of GPUs. Numeric IDs may be used, however ordering may vary, so UUIDs are more reliable. You can discover the UUID of your GPUs by running `nvidia-smi -L` If you want to ignore the GPUs and force CPU usage, use an invalid GPU ID (e.g., “-1”)
+
+### [​](https://docs.ollama.com/gpu#linux-suspend-resume) Linux Suspend Resume
+
+On linux, after a suspend/resume cycle, sometimes Ollama will fail to discover your NVIDIA GPU, and fallback to running on the CPU. You can workaround this driver bug by reloading the NVIDIA UVM driver with `sudo rmmod nvidia_uvm && sudo modprobe nvidia_uvm`
+
+## [​](https://docs.ollama.com/gpu#amd-radeon) AMD Radeon
+
+Ollama supports the following AMD GPUs via the ROCm library:
+
+> **NOTE:** Additional AMD GPU support is provided by the Vulkan Library - see below.
+
+### [​](https://docs.ollama.com/gpu#linux-support) Linux Support
+
+Ollama requires the AMD ROCm v7 driver on Linux. You can install or upgrade using the `amdgpu-install` utility from [AMD’s ROCm documentation](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/).
+
+FamilyCards and acceleratorsAMD Radeon RX`9070 XT` `9070 GRE` `9070` `9060 XT` `9060 XT LP` `9060` `7900 XTX` `7900 XT` `7900 GRE` `7800 XT` `7700 XT` `7700` `7600 XT` `7600` `6950 XT` `6900 XTX` `6900XT` `6800 XT` `6800`AMD Radeon AI PRO`R9700` `R9600D`AMD Radeon PRO`W7900` `W7800` `W7700` `W7600` `W7500` `W6900X` `W6800X Duo` `W6800X` `W6800` `V620`AMD Ryzen AI`Ryzen AI Max+ 395` `Ryzen AI Max 390` `Ryzen AI Max 385` `Ryzen AI 9 HX 475` `Ryzen AI 9 HX 470` `Ryzen AI 9 465` `Ryzen AI 9 HX 375` `Ryzen AI 9 HX 370` `Ryzen AI 9 365`AMD Instinct`MI350X` `MI300X` `MI300A` `MI250X` `MI250` `MI210` `MI100`
+
+### [​](https://docs.ollama.com/gpu#windows-support) Windows Support
+
+Ollama requires an AMD ROCm v7 / HIP7-capable driver stack on Windows.
+
+FamilyCards and acceleratorsAMD Radeon RX`7900 XTX` `7900 XT` `7900 GRE` `7800 XT` `7700 XT` `7600 XT` `7600`AMD Radeon PRO`W7900` `W7800` `W7700` `W7600` `W7500`
+
+### [​](https://docs.ollama.com/gpu#overrides-on-linux) Overrides on Linux
+
+Ollama leverages the AMD ROCm library, which does not support all AMD GPUs. In some cases you can force the system to try to use a similar LLVM target that is close. For example The Radeon RX 5400 is `gfx1034` (also known as 10.3.4) however, ROCm does not currently support this target. The closest support is `gfx1030`. You can use the environment variable `HSA_OVERRIDE_GFX_VERSION` with `x.y.z` syntax. So for example, to force the system to run on the RX 5400, you would set `HSA_OVERRIDE_GFX_VERSION="10.3.0"` as an environment variable for the server. If you have an unsupported AMD GPU you can experiment using the list of supported types below. If you have multiple GPUs with different GFX versions, append the numeric device number to the environment variable to set them individually. For example, `HSA_OVERRIDE_GFX_VERSION_0=10.3.0` and `HSA_OVERRIDE_GFX_VERSION_1=11.0.0` At this time, the known supported GPU types on linux are the following LLVM Targets. This table shows some example GPUs that map to these LLVM targets:
+
+**LLVM Target****An Example GPU**gfx908Radeon Instinct MI100gfx90aRadeon Instinct MI210/MI250gfx942Radeon Instinct MI300X/MI300Agfx950Radeon Instinct MI350Xgfx1030Radeon PRO V620gfx1100Radeon PRO W7900gfx1101Radeon PRO W7700gfx1102Radeon RX 7600gfx1150Ryzen AI 9 HX 375gfx1151Ryzen AI Max+ 395gfx1200Radeon RX 9070gfx1201Radeon RX 9070 XT
+
+Reach out on [Discord](https://discord.gg/ollama) or file an [issue](https://github.com/ollama/ollama/issues) for additional help.
+
+### [​](https://docs.ollama.com/gpu#gpu-selection-2) GPU Selection
+
+If you have multiple AMD GPUs in your system and want to limit Ollama to use a subset, you can set `ROCR_VISIBLE_DEVICES` to a comma separated list of GPUs. You can see the list of devices with `rocminfo`. If you want to ignore the GPUs and force CPU usage, use an invalid GPU ID (e.g., “-1”). When available, use the `Uuid` to uniquely identify the device instead of numeric value.
+
+### [​](https://docs.ollama.com/gpu#container-permission) Container Permission
+
+In some Linux distributions, SELinux can prevent containers from accessing the AMD GPU devices. On the host system you can run `sudo setsebool container_use_devices=1` to allow containers to use devices.
+
+## [​](https://docs.ollama.com/gpu#metal-apple-gpus) Metal (Apple GPUs)
+
+Ollama supports GPU acceleration on Apple devices via the Metal API.
+
+## [​](https://docs.ollama.com/gpu#vulkan-gpu-support) Vulkan GPU Support
+
+Additional GPU support on Windows and Linux is provided via [Vulkan](https://www.vulkan.org/). Vulkan is enabled by default when the backend is installed. On Windows most GPU vendors drivers come bundled with Vulkan support and require no additional setup steps. Most Linux distributions require installing additional components, and you may have multiple options for Vulkan drivers between Mesa and GPU Vendor specific packages
+
+- Linux Intel GPU Instructions - [https://dgpu-docs.intel.com/driver/client/overview.html](https://dgpu-docs.intel.com/driver/client/overview.html)
+- Linux AMD GPU Instructions - [https://amdgpu-install.readthedocs.io/en/latest/install-script.html#specifying-a-vulkan-implementation](https://amdgpu-install.readthedocs.io/en/latest/install-script.html#specifying-a-vulkan-implementation)
+
+For AMD GPUs on some Linux distributions, you may need to add the `ollama` user to the `render` group. The Ollama scheduler leverages available VRAM data reported by the GPU libraries to make optimal scheduling decisions. Vulkan requires additional capabilities or running as root to expose this available VRAM data. If neither root access or this capability are granted, Ollama will use approximate sizes of the models to make best effort scheduling decisions.
+
+```
+sudo setcap cap_perfmon+ep /usr/local/bin/ollama
+```
+
+### [​](https://docs.ollama.com/gpu#gpu-selection-3) GPU Selection
+
+To select specific Vulkan GPU(s), you can set the environment variable `GGML_VK_VISIBLE_DEVICES` to one or more numeric IDs on the Ollama server as described in the [FAQ](https://docs.ollama.com/faq#how-do-i-configure-ollama-server). If you encounter any problems with Vulkan based GPUs, you can disable all Vulkan GPUs by setting `OLLAMA_VULKAN=0` or `GGML_VK_VISIBLE_DEVICES=-1`. On mixed iGPU/dGPU systems where the Vulkan iGPU is unstable, keep Vulkan enabled and set `GGML_VK_VISIBLE_DEVICES` to the discrete GPU index. For example, use `GGML_VK_VISIBLE_DEVICES=1` when `Vulkan1` is the discrete GPU.
+
+
+===== https://github.com/couragec/skill-injection-attribution =====
+PROMPT: Report the repository description, file/directory structure, license, last commit date, what bfcl-canonical contains, and the exact commands documented for reproducing the experiments.
+**标题**: GitHub - wanyichen06/skill-injection-attribution: Accepted to Findings of EMNLP 2026. Artifact for attributing function-calling gains to interface alignment versus procedural transfer. · GitHub
+
+NameName
+
+Last commit message
+
+Last commit date
+
+[controls](https://github.com/wanyichen06/skill-injection-attribution/tree/main/controls "controls")
+
+[Refresh artifact README and compact public release](https://github.com/wanyichen06/skill-injection-attribution/commit/a1d374d47cffe564b1c453746f61c8da5eff6f18 "Refresh artifact README and compact public release")
+
+Aug 25, 2026
+
+[docs](https://github.com/wanyichen06/skill-injection-attribution/tree/main/docs "docs")
+
+[docs](https://github.com/wanyichen06/skill-injection-attribution/tree/main/docs "docs")
+
+[Highlight EMNLP 2026 acceptance and arXiv citation](https://github.com/wanyichen06/skill-injection-attribution/commit/bdef8b8e23f721c28152dd6e3ec5933090376e0d "Highlight EMNLP 2026 acceptance and arXiv citation")
+
+Aug 25, 2026
+
+[src](https://github.com/wanyichen06/skill-injection-attribution/tree/main/src "src")
+
+[src](https://github.com/wanyichen06/skill-injection-attribution/tree/main/src "src")
+
+[Refresh artifact README and compact public release](https://github.com/wanyichen06/skill-injection-attribution/commit/a1d374d47cffe564b1c453746f61c8da5eff6f18 "Refresh artifact README and compact public release")
+
+Aug 25, 2026
+
+[.gitignore](https://github.com/wanyichen06/skill-injection-attribution/blob/main/.gitignore ".gitignore")
+
+[.gitignore](https://github.com/wanyichen06/skill-injection-attribution/blob/main/.gitignore ".gitignore")
+
+[Refresh artifact README and compact public release](https://github.com/wanyichen06/skill-injection-attribution/commit/a1d374d47cffe564b1c453746f61c8da5eff6f18 "Refresh artifact README and compact public release")
+
+Aug 25, 2026
+
+[CITATION.cff](https://github.com/wanyichen06/skill-injection-attribution/blob/main/CITATION.cff "CITATION.cff")
+
+[CITATION.cff](https://github.com/wanyichen06/skill-injection-attribution/blob/main/CITATION.cff "CITATION.cff")
+
+[Publish compact artifact and project page](https://github.com/wanyichen06/skill-injection-attribution/commit/55995afd17491ddb7e6dead7994e07021a2c3ad0 "Publish compact artifact and project page")
+
+Aug 25, 2026
+
+[Add MIT license for released artifact code](https://github.com/wanyichen06/skill-injection-attribution/commit/6c9b098c6bee41b3385d943baca818d98adb293f "Add MIT license for released artifact code")
+
+Aug 25, 2026
+
+[README.md](https://github.com/wanyichen06/skill-injection-attribution/blob/main/README.md "README.md")
+
+[README.md](https://github.com/wanyichen06/skill-injection-attribution/blob/main/README.md "README.md")
+
+[Highlight EMNLP 2026 acceptance and arXiv citation](https://github.com/wanyichen06/skill-injection-attribution/commit/bdef8b8e23f721c28152dd6e3ec5933090376e0d "Highlight EMNLP 2026 acceptance and arXiv citation")
+
+Aug 25, 2026
+
+[Highlight EMNLP 2026 acceptance and arXiv citation](https://github.com/wanyichen06/skill-injection-attribution/commit/bdef8b8e23f721c28152dd6e3ec5933090376e0d "Highlight EMNLP 2026 acceptance and arXiv citation")
+
+Aug 25, 2026
+
+[Refresh artifact README and compact public release](https://github.com/wanyichen06/skill-injection-attribution/commit/a1d374d47cffe564b1c453746f61c8da5eff6f18 "Refresh artifact README and compact public release")
+
+Aug 25, 2026
+
+View all files
+
+# Skill Injection Attribution
+
+[](https://github.com/wanyichen06/skill-injection-attribution#skill-injection-attribution)
+
+**Attributing Structured-Output Gains in Function Calling: Interface Alignment versus Procedural Transfer**
+
+**Accepted to Findings of EMNLP 2026.** This is the compact public artifact for the accepted paper.
+
+中文文档见 [README_CN.md](https://github.com/wanyichen06/skill-injection-attribution/blob/main/README_CN.md)。
+
+## What this artifact tests
+
+[](https://github.com/wanyichen06/skill-injection-attribution#what-this-artifact-tests)
+
+Function-calling scores combine two properties:
+
+1. selecting the correct tool and arguments; and
+2. expressing the call in the wrapper format expected by the evaluator.
+
+This artifact provides the scorer and hand-written controls used to separate these effects. The paper's central diagnostic is simple: if a format-only instruction reproduces a gain, the gain should not be described as evidence of portable procedural transfer without additional controls.
+
+## What is included
+
+[](https://github.com/wanyichen06/skill-injection-attribution#what-is-included)
+
+```
+src/
+  evaluator.py          # JSON parsing and BFCL-style AST checks
+  rescore_canonical.py  # standard vs. canonicalized rescoring
+controls/
+  format_only/          # explicit output-contract controls
+  alias_only/           # wrapper-key controls
+  wrong_alias/          # negative alias control
+  schema_only/          # schema-only control
+  schema_example/       # schema-plus-example control
+  neutral_matched/      # length-matched neutral control
+```
+
+The public package intentionally contains method code and hand-written control templates only. It does **not** include model-generated skills, raw model outputs, benchmark manifests, per-item result dumps, or intermediate analysis files.
+
+## Quick start
+
+[](https://github.com/wanyichen06/skill-injection-attribution#quick-start)
+
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+To rescore a directory of BFCL-style JSON files:
+
+```
+python src/rescore_canonical.py \
+  --results-dir /path/to/bfcl_v2_results \
+  --output /path/to/rescoring_analysis.json
+```
+
+Each input JSON file should contain records with `model`, `condition`, `prediction`, and `ground_truth` fields. The script reports standard scoring, canonicalized scoring, wrapper-key frequencies, and paired bootstrap summaries. Canonicalization is intentionally narrow: it normalizes wrapper-key aliases that preserve the same function-call structure; it is not a complete semantic executor or an official leaderboard rescore.
+
+## Paper and scope
+
+[](https://github.com/wanyichen06/skill-injection-attribution#paper-and-scope)
+
+- **Venue:** Findings of EMNLP 2026 (accepted)
+- **Authors:** Wanyi Chen, Daoyuan Chen, Fang Kong
+- **Paper:** [arXiv:2607.02595](https://arxiv.org/abs/2607.02595)
+- **English paper:** [README_EN.md](https://github.com/wanyichen06/skill-injection-attribution/blob/main/README_EN.md)
+
+The paper evaluates BFCL-style structured output primarily, with API-Bank as a cross-contract diagnostic and MATH-500/MultiHop-RAG as scope checks. Reported numbers and the interpretation of each diagnostic are in the paper; this repository is the compact method release.
+
+## Citation
+
+[](https://github.com/wanyichen06/skill-injection-attribution#citation)
+
+```
+@misc{chen2026attributingstructuredoutputgainsfunction,
+  title         = {Attributing Structured-Output Gains in Function Calling: Interface Alignment versus Procedural Transfer},
+  author        = {Wanyi Chen and Daoyuan Chen and Fang Kong},
+  year          = {2026},
+  eprint        = {2607.02595},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2607.02595}
+}
+```
+
+## License
+
+[](https://github.com/wanyichen06/skill-injection-attribution#license)
+
+The code and hand-written controls are released under the MIT License. The benchmarks and models referenced by the paper remain subject to their original licenses and terms of use.
